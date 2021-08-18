@@ -1,0 +1,188 @@
+{
+    "name": "programming-grid",
+    "displayName": "编程网格",
+    "description": "",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.59.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "./out/extension.js",
+    "contributes": {
+        "commands": [
+            {
+                "command": "programming-grid.openProblem",
+                "title": "Open Problem"
+            },
+            {
+                "command": "programming-grid.submit",
+                "title": "Submit",
+                "icon": "$(run-above)"
+            },
+            {
+                "command": "programming-grid.run",
+                "title": "Run code",
+                "icon": "$(run)"
+            },
+            {
+                "command": "programming-grid.refresh",
+                "category": "Programming Grid",
+                "title": "Refresh Panel",
+                "shortTitle": "刷新面板",
+                "icon": "$(refresh)"
+            },
+            {
+                "command": "programming-grid.setCourseId",
+                "category": "Programming Grid",
+                "title": "Set Course",
+                "shortTitle": "设置课程",
+                "icon": "$(edit)"
+            },
+            {
+                "command": "programming-grid.setUser",
+                "category": "Programming Grid",
+                "title": "Set User",
+                "shortTitle": "设置用户",
+                "icon": "$(edit)"
+            }
+        ],
+        "configuration": [
+            {
+                "title": "编程网格",
+                "properties": {
+                    "programming-grid.username": {
+                        "type": "string",
+                        "title": "用户名",
+                        "description": "用户名",
+                        "default": ""
+                    },
+                    "programming-grid.password": {
+                        "type": "string",
+                        "title": "密码",
+                        "description": "密码",
+                        "default": ""
+                    },
+                    "programming-grid.courseId": {
+                        "type": "string",
+                        "pattern": "^([0-9a-f]{32})|",
+                        "title": "课程ID",
+                        "description": "课程ID",
+                        "default": ""
+                    },
+                    "programming-grid.hideClosedProblems": {
+                        "type": "boolean",
+                        "default": true,
+                        "title": "隐藏已关闭的题集",
+                        "description": "选中后，关闭（已经截止或尚未开始）的题集将不会出现在题目列表中。"
+                    }
+                }
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "programming-grid",
+                    "title": "编程网格",
+                    "icon": "assets/icon.svg"
+                }
+            ]
+        },
+        "views": {
+            "programming-grid": [
+                {
+                    "id": "pgInfo",
+                    "name": "信息",
+                    "visibility": "collapsed"
+                },
+                {
+                    "id": "pgProblems",
+                    "name": "题目"
+                }
+            ]
+        },
+        "menus": {
+            "view/title": [
+                {
+                    "command": "programming-grid.refresh",
+                    "when": "view == pgProblems",
+                    "group": "navigation"
+                }
+            ],
+            "view/item/context": [
+                {
+                    "command": "programming-grid.setUser",
+                    "when": "view == pgInfo && viewItem == username",
+                    "group": "inline"
+                },
+                {
+                    "command": "programming-grid.setCourseId",
+                    "when": "view == pgInfo && viewItem == courseId",
+                    "group": "inline"
+                }
+            ],
+            "editor/title": [
+                {
+                    "command": "programming-grid.submit",
+                    "when": "resourcePath in programming-grid.editorFile",
+                    "group": "navigation"
+                }
+            ],
+            "commandPalette": [
+                {
+                    "command": "programming-grid.openProblem",
+                    "when": "false"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "key": "f7",
+                "command": "programming-grid.run",
+                "when": "resourcePath in programming-grid.editorFile"
+            },
+            {
+                "key": "ctrl+f7",
+                "mac": "cmd+f7",
+                "command": "programming-grid.submit",
+                "when": "resourcePath in programming-grid.editorFile"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "pretest": "npm run compile && npm run lint",
+        "lint": "eslint src --ext ts",
+        "test": "node ./out/test/runTest.js"
+    },
+    "devDependencies": {
+        "@types/glob": "^7.1.3",
+        "@types/mocha": "^8.2.2",
+        "@types/node": "14.x",
+        "@types/node-fetch": "^2.5.12",
+        "@types/vscode": "^1.59.0",
+        "@typescript-eslint/eslint-plugin": "^4.26.0",
+        "@typescript-eslint/parser": "^4.26.0",
+        "eslint": "^7.27.0",
+        "glob": "^7.1.7",
+        "mocha": "^8.4.0",
+        "typescript": "^4.3.2",
+        "vscode-test": "^1.5.2"
+    },
+    "dependencies": {
+        "@types/mime": "^2.0.3",
+        "@vscode/codicons": "^0.0.21",
+        "bootstrap": "^5.1.0",
+        "cheerio": "^1.0.0-rc.10",
+        "fetch-cookie": "^1.0.0",
+        "iconv-lite": "^0.6.3",
+        "mime": "^2.5.2",
+        "node-fetch": "^2.6.1"
+    }
+}
