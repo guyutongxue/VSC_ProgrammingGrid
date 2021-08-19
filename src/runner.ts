@@ -1,8 +1,11 @@
 import * as vscode from "vscode";
 import * as cp from "child_process";
 import * as os from "os";
+import * as path from "path";
+import { sync as commandExists } from "command-exists";
 import { getEditorCppPath, getEditorExecutablePath } from "./editor";
-import path = require("path");
+import * as terminals from "./terminal_emulators.json";
+import { getTerminalCommand, setTerminalCommand } from "./config";
 
 type CompileResult = {
     success: true;
@@ -66,16 +69,32 @@ export class Runner implements vscode.Disposable {
         return this._runTerminal;
     }
 
-    runWindows(inputArg: string) {
-        const pauseScriptArg = JSON.stringify(this._pauseScriptPath);
-        const executableArg = JSON.stringify(this._editorExecutablePath);
-        this._getTerminal().sendText(`START C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe -ExecutionPolicy ByPass -NoProfile -File ${pauseScriptArg} ${executableArg} ${inputArg}`);
+    runWindows(scriptArg: string, exeArg: string, inputArg: string) {
+        this._getTerminal().sendText(`START C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe -ExecutionPolicy ByPass -NoProfile -File ${scriptArg} ${exeArg} ${inputArg}`);
     }
 
-    runLinux(inputArg: string) {
-        const pauseScriptArg = JSON.stringify(this._pauseScriptPath);
-        const executableArg = JSON.stringify(this._editorExecutablePath);
-        this._getTerminal().sendText(`x-terminal-emulator -e ${pauseScriptArg} ${executableArg} ${inputArg}`);
+    runMac(scriptArg: string, exeArg: string, inputArg: string) {
+        this._getTerminal().sendText(`open -a Terminal.app ${scriptArg} ${exeArg} ${inputArg}`);
+    }
+
+    runLinux(scriptArg: string, exeArg: string, inputArg: string) {
+        let command = getTerminalCommand();
+        if (command === "") {
+            for (const terminal of terminals) {
+                if (commandExists(terminal.name)) {
+                    command = terminal.command;
+                    break;
+                }
+            }
+            if (command === "") {
+                vscode.window.showErrorMessage("未检测到常见的终端模拟器。请手动设置 programming-grid.terminalCommand。");
+                return;
+            }
+            vscode.window.showInformationMessage(`将使用 ${command} 作为启动终端模拟器的命令行。`);
+            setTerminalCommand(command);
+        }
+        const result = command.replace("$cmd", scriptArg).replace("$args", `${exeArg} ${inputArg}`);
+        this._getTerminal().sendText(result);
     }
 
     async run(inputfile?: string): Promise<string | null> {
@@ -93,10 +112,14 @@ export class Runner implements vscode.Disposable {
             inputfile = JSON.stringify(inputfile);
         }
         if (result.success) {
+            const scriptArg = JSON.stringify(this._pauseScriptPath);
+            const exeArg = JSON.stringify(this._editorExecutablePath);
             if (os.platform() === "win32") {
-                this.runWindows(inputfile);
+                this.runWindows(scriptArg, exeArg, inputfile);
+            } else if (os.platform() === "darwin") {
+                this.runMac(scriptArg, exeArg, inputfile);
             } else {
-                this.runLinux(inputfile);
+                this.runLinux(scriptArg, exeArg, inputfile);
             }
             return null;
         } else {

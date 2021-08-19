@@ -1,19 +1,19 @@
 import { commands, window, workspace } from 'vscode';
 
 export function getUsername() {
-    const result: string | undefined = workspace.getConfiguration('programming-grid').get('username');
+    const result: string | undefined = workspace.getConfiguration('programming-grid').get('info.username');
     if (result === "") return null;
     return result ?? null;
 }
 
 export function getPassword() {
-    const result: string | undefined = workspace.getConfiguration('programming-grid').get('password');
+    const result: string | undefined = workspace.getConfiguration('programming-grid').get('info.password');
     if (result === "") return null;
     return result ?? null;
 }
 
 export function getCourseId() {
-    const result: string | undefined = workspace.getConfiguration('programming-grid').get('courseId');
+    const result: string | undefined = workspace.getConfiguration('programming-grid').get('info.courseId');
     if (result === "") return null;
     return result ?? null;
 }
@@ -39,8 +39,8 @@ export async function setUser() {
         }
     });
     if (password === undefined) return;
-    workspace.getConfiguration('programming-grid').update('username', username, true);
-    workspace.getConfiguration('programming-grid').update('password', password, true);
+    workspace.getConfiguration('programming-grid').update('info.username', username, true);
+    workspace.getConfiguration('programming-grid').update('info.password', password, true);
     commands.executeCommand('programming-grid.refresh');
 }
 
@@ -61,11 +61,19 @@ export async function setCourseId() {
     if (typeof result === "undefined") return;
     const id = validator.exec(result)![1];
     console.log(id);
-    workspace.getConfiguration('programming-grid').update('courseId', id, true);
+    workspace.getConfiguration('programming-grid').update('info.courseId', id, true);
     commands.executeCommand('programming-grid.refresh');
 }
 
 export function hideClosedProblems() {
     const hidden: boolean | undefined = workspace.getConfiguration('programming-grid').get('hideClosedProblems');
     return hidden ?? true;
+}
+
+export function getTerminalCommand() {
+    const command: string | undefined = workspace.getConfiguration('programming-grid').get('terminalCommand');
+    return command ?? "";
+}
+export function setTerminalCommand(value: string) {
+    workspace.getConfiguration('programming-grid').update('terminalCommand', value, true);
 }

@@ -1,0 +1,38 @@
+[
+    {
+        "name": "x-terminal-emulator",
+        "command": "x-terminal-emulator -e $cmd $args"
+    },
+    {
+        "name": "konsole",
+        "command": "konsole -e $cmd $args"
+    },
+    {
+        "name": "gnome-terminal",
+        "command": "gnome-terminal -- $cmd $args"
+    },
+    {
+        "name": "urxvt",
+        "command": "urxvt -e $cmd $args"
+    },
+    {
+        "name": "xfce4-terminal",
+        "command": "xfce4-terminal -x $cmd $args"
+    },
+    {
+        "name": "terminator",
+        "command": "terminator -x $cmd $args"
+    },
+    {
+        "name": "kitty",
+        "command": "kitty $cmd $args"
+    },
+    {
+        "name": "alacritty",
+        "command": "alacritty -e $cmd $args"
+    },
+    {
+        "name": "xterm",
+        "command": "xterm -e $cmd $args"
+    }
+]

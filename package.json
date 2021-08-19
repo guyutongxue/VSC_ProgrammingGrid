@@ -55,30 +55,32 @@
             {
                 "title": "编程网格",
                 "properties": {
-                    "programming-grid.username": {
+                    "programming-grid.info.username": {
                         "type": "string",
-                        "title": "用户名",
-                        "description": "用户名",
+                        "description": "登录到编程网格的用户名。",
                         "default": ""
                     },
-                    "programming-grid.password": {
+                    "programming-grid.info.password": {
                         "type": "string",
-                        "title": "密码",
-                        "description": "密码",
+                        "description": "登录到编程网格的密码。扩展只会将此密码发送给编程网格服务器。",
                         "default": ""
                     },
-                    "programming-grid.courseId": {
+                    "programming-grid.info.courseId": {
                         "type": "string",
                         "pattern": "^([0-9a-f]{32})|",
-                        "title": "课程ID",
-                        "description": "课程ID",
+                        "description": "当前启用的课程 ID。",
                         "default": ""
                     },
                     "programming-grid.hideClosedProblems": {
                         "type": "boolean",
                         "default": true,
-                        "title": "隐藏已关闭的题集",
-                        "description": "选中后，关闭（已经截止或尚未开始）的题集将不会出现在题目列表中。"
+                        "description": "选中后，已经截止或尚未开始的题集将不会出现在题目列表中。"
+                    },
+                    "programming-grid.terminalCommand": {
+                        "type": "string",
+                        "default": "",
+                        "markdownDescription": "仅 Linux 系统：设置如何启动终端模拟器。用 `$cmd` 代表启动时执行的命令，用 `$args` 代表执行该命令时传入的参数。例：`gnome-terminal -- $cmd $args`。若留空，则工具将尝试自动设置。"
+                        
                     }
                 }
             }
@@ -176,10 +178,12 @@
         "vscode-test": "^1.5.2"
     },
     "dependencies": {
+        "@types/command-exists": "^1.2.0",
         "@types/mime": "^2.0.3",
         "@vscode/codicons": "^0.0.21",
         "bootstrap": "^5.1.0",
         "cheerio": "^1.0.0-rc.10",
+        "command-exists": "^1.2.9",
         "fetch-cookie": "^1.0.0",
         "iconv-lite": "^0.6.3",
         "mime": "^2.5.2",
