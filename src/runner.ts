@@ -106,7 +106,7 @@ export class Runner implements vscode.Disposable {
             return this._compile();
         });
         console.log(result);
-        if (typeof inputfile === "undefined") {
+        if (typeof inputfile !== "string") {
             inputfile = "";
         } else {
             inputfile = JSON.stringify(inputfile);

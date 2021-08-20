@@ -77,3 +77,74 @@ export function getTerminalCommand() {
 export function setTerminalCommand(value: string) {
     workspace.getConfiguration('programming-grid').update('terminalCommand', value, true);
 }
+
+const colorMap: {
+    [key: string]: {
+        [key: string]: string
+    }
+} = {
+    'luogu': {
+        'Passed': '82, 196, 26',
+        'WrongAnswer': '231, 76, 60',
+        'RuntimeError': '157, 61, 207',
+        'CompileError': '250, 219, 20',
+        // These two maybe not used
+        'TimeLimitExceeded': '5, 34, 66',
+        'MemoryLimitExceeded': '5, 34, 66',
+
+        'Unknown': '204, 49, 124'
+    },
+    'pku': {
+        'Passed': '0, 0, 255',
+        'WrongAnswer': '255, 0, 0',
+        'RuntimeError': '255, 0, 255',
+        'CompileError': '0, 128, 0',
+
+        'Unknown': '0, 0, 255'
+    }
+};
+
+function getStatusColor(status: string) {
+    const theme: string = workspace.getConfiguration('programming-grid').get('colorTheme') ?? 'luogu';
+    const colors = colorMap[theme] ?? colorMap['luogu'];
+    return colors[status] ?? colors['Unknown'];
+}
+
+const chineseMap: {
+    [key: string]: string
+} = {
+    'Passed': '通过',
+    'WrongAnswer': '错误答案',
+    'RuntimeError': '运行错误',
+    'CompileError': '编译错误',
+    'TimeLimitExceeded': '超时',
+    'MemoryLimitExceeded': '超内存',
+
+    'Unknown': '未知情形'
+};
+
+const abbrMap: {
+    [key: string]: string
+} = {
+    'Passed': 'AC',
+    'WrongAnswer': 'WA',
+    'RuntimeError': 'RE',
+    'CompileError': 'CE',
+    'TimeLimitExceeded': 'TLE',
+    'MemoryLimitExceeded': 'MLE',
+
+    'Unknown': 'UNK'
+};
+
+export function getStatusInfo(status: string) {
+    const color = getStatusColor(status);
+    const title = status.replace(/(?!^)([A-Z])/g, ' $1');
+    const chinese = chineseMap[status] ?? chineseMap['Unknown'];
+    const abbr = abbrMap[status] ?? abbrMap['Unknown'];
+    return {
+        color,
+        title,
+        chinese,
+        abbr
+    };
+}

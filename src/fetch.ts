@@ -184,18 +184,21 @@ export async function getProblems(setId: string) {
             return [];
         }
         return $("ol").children().map(function (i) {
-            const a = $(this).children("a");
+            const a = $(this).children("a").eq(0);
             const href = a.attr("href");
             const text = a.text();
             if (typeof href === "undefined") return null;
             const result = /\/programming\/problem\/([0-9a-f]{32})\/show\.do/.exec(href);
             if (result === null) return null;
             const pId = result[1];
+            const font = $(this).find("font");
+            const status = font.length === 0 ? undefined : font.attr('color') === 'red' ? 'wa' : 'ac' ;
             return <IProblemInfo>{
                 id: pId,
                 setId: setId,
                 text: text,
-                index: i + 1
+                index: i + 1,
+                status: status
             };
         }).toArray();
     });
@@ -283,16 +286,17 @@ function parseSolutionPage(text: string): SolutionDescription | null {
 }
 
 // TODO: remove this when server is on
-export function debug(page: string) {
-    tryFetch(page, {
+export async function debug(page: string) {
+    return tryFetch(page, {
         headers
     }).then(text => {
         if (text === null) {
             vscode.window.showErrorMessage("获取失败");
-            return;
+            return null;
         }
         const r = parseSolutionPage(text);
         console.log(r);
+        return r;
     });
 }
 

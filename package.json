@@ -80,7 +80,12 @@
                         "type": "string",
                         "default": "",
                         "markdownDescription": "仅 Linux 系统：设置如何启动终端模拟器。用 `$cmd` 代表启动时执行的命令，用 `$args` 代表执行该命令时传入的参数。例：`gnome-terminal -- $cmd $args`。若留空，则工具将尝试自动设置。"
-                        
+                    },
+                    "programming-grid.colorTheme": {
+                        "type": "string",
+                        "enum": [ "luogu", "pku" ],
+                        "default": "luogu",
+                        "description": "设置提交结果颜色主题。"
                     }
                 }
             }
@@ -128,6 +133,11 @@
                 }
             ],
             "editor/title": [
+                {
+                    "command": "programming-grid.run",
+                    "when": "resourcePath in programming-grid.editorFile",
+                    "group": "navigation"
+                },
                 {
                     "command": "programming-grid.submit",
                     "when": "resourcePath in programming-grid.editorFile",

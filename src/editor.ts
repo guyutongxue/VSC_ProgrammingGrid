@@ -1,9 +1,10 @@
-import { getDescription, ProblemDescription, submitCode } from "./fetch";
+import { debug, getDescription, ProblemDescription, submitCode } from "./fetch";
 import { IProblemInfo } from "./problemProvider";
 import * as vscode from "vscode";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { getStatusInfo } from "./config";
 
 let storageDir: vscode.Uri;
 let extensionDir: vscode.Uri;
@@ -69,6 +70,8 @@ export class EditorController implements vscode.Disposable {
         this._editorCppPath = getEditorCppPath();
         this._inputTxtPath = vscode.Uri.joinPath(storageDir, "input.txt").fsPath;
         this._editorListeners = [
+            // No usage due to https://github.com/microsoft/vscode/issues/15178
+            // `onDidCloseTextDocument` won't be fired immediately
             vscode.workspace.onDidCloseTextDocument(doc => {
                 if (this._textDoc === doc) {
                     this._textDoc = null;
@@ -105,9 +108,73 @@ export class EditorController implements vscode.Disposable {
     <link rel="stylesheet" href="${wv.asWebviewUri(getCodiconCss())}">
     <title>编程网格</title>
     <style>
+        :root {
+            --status-color: 82, 196, 26;
+        }
+
         pre {
             background-color: var(--bs-light);
             padding: 1rem 1.5rem;
+        }
+
+        .status-block {
+            background-color: rgb(var(--status-color));
+            color: white;
+            font-size: 24px;
+            height: 100px;
+            width: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .status-block-note {
+            font-size: 11px;
+        }
+
+        .status-text {
+            background-color: rgba(var(--status-color), 0.2);
+            position: relative;
+        }
+
+        #chineseStamp {
+            box-shadow: 0 0 0 3px rgb(var(--status-color)), 0 0 0 2px rgb(var(--status-color)) inset;
+            border: solid 2px transparent;
+            border-radius: .2em;
+            color: rgb(var(--status-color));
+            font-size: 30px;
+            font-weight: bold;
+            line-height: 1;
+            opacity: 0;
+            position: absolute;
+            padding: .15em .5em;
+            margin: 0 auto;
+            bottom: 0;
+            right: 10%;
+            transform-origin: 50% 50%;
+            transform: rotate(-15deg) translateY(25%);
+            z-index: 2;
+            opacity: .75;
+        }
+
+        .highin,
+        .highout,
+        .highstd {
+            display: inline-block;
+            border-radius: 4px;
+        }
+
+        .highin {
+            background-color: #ffa;
+        }
+
+        .highout {
+            background-color: bisque;
+        }
+
+        .highstd {
+            background-color: #eef;
         }
 
         .codicon {
@@ -159,10 +226,50 @@ export class EditorController implements vscode.Disposable {
         </main>
         <footer class="mx-3 mb-3 d-flex flex-direction-row justify-content-between align-items-center">
             <small class="text-muted">本页面由“编程网格” VS Code 扩展提供</small>
-            <button class="btn btn-link btn-small flex-shrink-0" onclick="p('origin')">打开原网页</button>
+            <div class="dropup flex-shrink-0">
+                <button type="button" class="btn btn-small btn-light dropdown-toggle" data-bs-toggle="dropdown">
+                    更多选项
+                </button>
+                <ul class="dropdown-menu">
+                    <li><span class="dropdown-item" onclick="p('origin')">
+                            <i class="codicon codicon-browser"></i>
+                            打开原网页
+                        </span></li>
+                    <li><span class="dropdown-item" onclick="p('open_editor')">
+                            <i class="codicon codicon-edit"></i>
+                            显示编辑器
+                        </span></li>
+                </ul>
+            </div>
         </footer>
     </article>
+    <div id="solutionModal" class="modal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4>提交结果</h4>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex flex-row align-items-stretch pb-3">
+                        <div class="status-block">
+                            <span id="statusAbbr"></span>
+                            <div class="status-block-note" id="performanceInfo"></div>
+                        </div>
+                        <div class="status-text flex-grow-1 d-flex flex-column justify-content-center">
+                            <div class="display-4 text-center fw-light" id="statusTitle"></div>
+                            <div id="chineseStamp" class="d-none d-sm-block"></div>
+                        </div>
+                    </div>
+                    <h5><strong>提示</strong></h5>
+                    <pre><code id="solutionDetails"></code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const solutionModal = new bootstrap.Modal(document.querySelector('#solutionModal'), { keyboard: false })
         const vscode = acquireVsCodeApi();
         function p(cmd, ...args) {
             vscode.postMessage({
@@ -170,6 +277,24 @@ export class EditorController implements vscode.Disposable {
                 args: args
             });
         }
+        window.addEventListener('message', e => {
+            const message = e.data;
+            switch (message.command) {
+                case 'showSolution':
+                    const solution = message.args[0];
+                    document.documentElement.style.setProperty('--status-color', solution.color);
+                    document.querySelector('#chineseStamp').innerHTML = solution.chinese;
+                    document.querySelector('#statusAbbr').innerHTML = solution.abbr;
+                    document.querySelector('#statusTitle').innerHTML = solution.title;
+                    document.querySelector('#solutionDetails').innerHTML = solution.details;
+                    document.querySelector('#performanceInfo').innerHTML = solution.performance;
+                    solutionModal.show();
+                    break;
+                case 'showCompileError':
+                    // TODO
+                    break;
+            }
+        });
     </script>
 </body>
 
@@ -209,6 +334,9 @@ export class EditorController implements vscode.Disposable {
                             vscode.env.openExternal(vscode.Uri.parse(`https://programming.pku.edu.cn/programming/problem/${info.id}/show.do?problemsId=${info.setId}`));
                         }
                         return;
+                    case 'open_editor':
+                        this.openEditor();
+                        return;
                 }
             }
         );
@@ -216,6 +344,14 @@ export class EditorController implements vscode.Disposable {
             this._webPanel = null;
             this.save();
             disposable.dispose();
+        });
+    }
+
+    private _postMessageToWebPanel(command: string, ...args: any[]) {
+        if (this._webPanel === null) return;
+        this._webPanel.webview.postMessage({
+            command: command,
+            args: args
         });
     }
 
@@ -278,7 +414,30 @@ export class EditorController implements vscode.Disposable {
         await this.save();
         if (this._currentProblem === null) return;
         const code = getContent(this._editorCppPath);
-        const result = await submitCode(this._currentProblem, code);
+        const result = await debug("https://programming.pku.edu.cn/programming/problem/solution.do?solutionId=303f0a22f360429eb3de257dedea3b00");
+        // const result = await submitCode(this._currentProblem, code);
+        if (result === null) return;
+        // Get average performance
+        const perfReg = /^Case \d+: Time = (\d+)ms, Memory = (\d+)kB\.$/gm;
+        const time: number[] = [], memory: number[] = [];
+        let match: RegExpExecArray | null;
+        let perfRes: string;
+        while ((match = perfReg.exec(result.details)) !== null) {
+            time.push(parseInt(match[1]));
+            memory.push(parseInt(match[2]));
+        }
+        if (time.length !== 0) {
+            const aveTime = (time.reduce((a, b) => a + b) / time.length).toFixed();
+            const aveMemory = (memory.reduce((a, b) => a + b) / memory.length).toFixed();
+            perfRes = `${aveTime}ms/${aveMemory}kB`;
+        } else {
+            perfRes = "N/A";
+        }
+        this._postMessageToWebPanel('showSolution', {
+            ...getStatusInfo(result.status),
+            performance: perfRes,
+            details: result.details
+        });
     }
 
     showCompileError(error: string) {

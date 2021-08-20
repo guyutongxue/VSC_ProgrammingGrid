@@ -1,3 +1,4 @@
+import path = require('path');
 import * as vscode from 'vscode';
 import { TreeItem } from 'vscode';
 import { hideClosedProblems } from './config';
@@ -8,6 +9,7 @@ export interface IProblemInfo {
     setId: string;
     text: string;
     index: number;
+    status?: 'ac' | 'wa';
 }
 export interface IProblemSetInfo extends IProblemInfo {
     id: string;
@@ -18,12 +20,18 @@ export interface IProblemSetInfo extends IProblemInfo {
 class Problem extends TreeItem {
     constructor(public readonly info: IProblemInfo) {
         super(`${info.index}. ${info.text}`, vscode.TreeItemCollapsibleState.None);
+        console.log(info);
         this.id = info.setId + '/' + info.id;
         this.command = {
             title: "Open Problem",
             command: "programming-grid.openProblem",
             arguments: [this.info]
         };
+        if (info.status === 'ac') {
+            this.iconPath = path.join(__dirname, '../assets/check2.svg');
+        } else if (info.status === 'wa') {
+            this.iconPath = path.join(__dirname, '../assets/x.svg');
+        }
     }
 }
 
