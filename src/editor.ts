@@ -177,6 +177,18 @@ export class EditorController implements vscode.Disposable {
             background-color: #eef;
         }
 
+        .diag-warning {
+            color: #fd7e14; /* instead of text-warning */
+        }
+
+        .diag-range1 {
+            color: #20c997
+        }
+
+        .diag-range2 {
+            color: #0dcaf0
+        }
+
         .codicon {
             transform: translateY(1.5px);
         }
@@ -247,7 +259,7 @@ export class EditorController implements vscode.Disposable {
         <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4>提交结果</h4>
+                    <h4 class="my-1">提交结果</h4>
                     <button class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -267,9 +279,25 @@ export class EditorController implements vscode.Disposable {
             </div>
         </div>
     </div>
+    <div id="compileErrorModal" class="modal" tabindex="-1">
+        <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="my-1">本地运行</h4>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <h5><strong>编译器诊断信息</strong></h5>
+                    <pre><code id="compileInfoDetails"></code></pre>
+                    <div class="alert alert-info d-none" id="compileInfoHint"></div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const solutionModal = new bootstrap.Modal(document.querySelector('#solutionModal'), { keyboard: false })
+        const solutionModal = new bootstrap.Modal(document.querySelector('#solutionModal'), { keyboard: false });
+        const compileErrorModal = new bootstrap.Modal(document.querySelector('#compileErrorModal'), { keyboard: false });
         const vscode = acquireVsCodeApi();
         function p(cmd, ...args) {
             vscode.postMessage({
@@ -290,8 +318,15 @@ export class EditorController implements vscode.Disposable {
                     document.querySelector('#performanceInfo').innerHTML = solution.performance;
                     solutionModal.show();
                     break;
-                case 'showCompileError':
-                    // TODO
+                case 'showCompileInfo':
+                    document.querySelector('#compileInfoDetails').innerHTML = message.args[0];
+                    if (message.args[1]) {
+                        document.querySelector('#compileInfoHint').classList.remove('d-none');
+                        document.querySelector('#compileInfoHint').innerHTML = message.args[1];
+                    } else {
+                        document.querySelector('#compileInfoHint').classList.add('d-none');
+                    }
+                    compileErrorModal.show();
                     break;
             }
         });
@@ -340,6 +375,7 @@ export class EditorController implements vscode.Disposable {
                 }
             }
         );
+        this._webPanel.iconPath = vscode.Uri.file(path.join(__dirname, '../assets/icon.svg'));
         this._webPanel.onDidDispose(() => {
             this._webPanel = null;
             this.save();
@@ -414,7 +450,7 @@ export class EditorController implements vscode.Disposable {
         await this.save();
         if (this._currentProblem === null) return;
         const code = getContent(this._editorCppPath);
-        const result = await debug("https://programming.pku.edu.cn/programming/problem/solution.do?solutionId=303f0a22f360429eb3de257dedea3b00");
+        const result = await debug("https://programming.pku.edu.cn/programming/problem/solution.do?solutionId=ccae1e10df8f4ce9a255e0a9cfab86ce");
         // const result = await submitCode(this._currentProblem, code);
         if (result === null) return;
         // Get average performance
@@ -440,8 +476,25 @@ export class EditorController implements vscode.Disposable {
         });
     }
 
-    showCompileError(error: string) {
-        // TODO
+    showCompileInfo(type: "warn" | "err", message: string) {
+        const description = type === "warn" ? "存在警告" : "发生错误";
+        const show = type === "warn" ? vscode.window.showWarningMessage : vscode.window.showErrorMessage;
+        if (this._webPanel === null) {
+            show(`编译${description}：请打开编程网格页面以显示更多信息。`);
+            return;
+        } else {
+            show(`编译${description}。`);
+            let hint = "";
+            if (type === "err" && message.search(/error: ld returned 1 exit status$/m) !== -1) {
+                if (message.search(/Permission denied$/m) !== -1) {
+                    hint = "是否已有正在运行的程序？请在编译之前关闭正在运行的窗口。";
+                }
+                if (message.search(/undefined reference to `(WinMain|main)'$/m) !== -1) {
+                    hint = "是否定义了 main 函数？请保证源代码中存在一个 main 函数。";
+                }
+            }
+            this._postMessageToWebPanel('showCompileInfo', replaceColorToHtml(message), hint);
+        }
     }
 
     dispose() {
@@ -449,4 +502,27 @@ export class EditorController implements vscode.Disposable {
         this._editorListeners.forEach(l => l.dispose());
     }
 
+}
+
+function replaceColorToHtml(content: string): string {
+    // restore
+    return content.replace(/\x1b\[m\x1b\[K/g, `</span>`)
+        // error
+        .replace(/\x1b\[01;31m\x1b\[K/g, `<span class="fw-bold text-danger">`)
+        // warning
+        .replace(/\x1b\[01;35m\x1b\[K/g, `<span class="fw-bold diag-warning">`)
+        // note, path
+        .replace(/\x1b\[01;36m\x1b\[K/g, `<span class="fw-bold text-primary">`)
+        // range1 (green)
+        .replace(/\x1b\[32m\x1b\[K/g, `<span class="diag-range1">`)
+        // range2 (blue)
+        .replace(/\x1b\[34m\x1b\[K/g, `<span class="diag-range2">`)
+        // locus, quote
+        .replace(/\x1b\[01m\x1b\[K/g, `<span class="fw-bold">`)
+        // fixit-insert
+        .replace(/\x1b\[32m\x1b\[K/g, `<span class="text-success">`)
+        // fixit-delete
+        .replace(/\x1b\[31m\x1b\[K/g, `<span class="text-danger">`)
+        // type-diff
+        .replace(/\x1b\[01;32m\x1b\[K/g, `<span class="fw-bold dg-range1">`);
 }

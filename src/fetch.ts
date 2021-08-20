@@ -29,7 +29,7 @@ const headers: HeadersInit = {
     'Accept-Language': acceptLanguage
 };
 
-async function login(): Promise<boolean> {
+export async function login(): Promise<boolean> {
     const username = getUsername();
     const password = getPassword();
     if (username === null || password === null) {
@@ -62,6 +62,7 @@ async function login(): Promise<boolean> {
 
 export async function getCourseName() {
     const id = getCourseId();
+    if (id === null) return null;
     const page = `https://programming.pku.edu.cn/programming/course/${id}/show.do`;
     return fetch(page, {
         headers
@@ -78,6 +79,7 @@ export async function getCourseName() {
 
 export async function getProblemSets() {
     const id = getCourseId();
+    if (id === null) return [];
     const page = `https://programming.pku.edu.cn/programming/course/${id}/show.do`;
     return fetch(page, {
         headers
@@ -307,6 +309,11 @@ export function submitCode(info: IProblemInfo, code: string) {
     data.append('problemsId', info.setId);
     data.append('sourceCode', code);
     data.append('programLanguage', 'C++');
+    // TODO: move to the end of this function when server is on
+    vscode.commands.executeCommand("programming-grid.refresh", {
+        type: "problemSet",
+        value: info.setId
+    });
     return tryFetch(page, {
         method: "POST",
         headers: {

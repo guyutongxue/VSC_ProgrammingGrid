@@ -1,4 +1,5 @@
 import { commands, window, workspace } from 'vscode';
+import { login } from './fetch';
 
 export function getUsername() {
     const result: string | undefined = workspace.getConfiguration('programming-grid').get('info.username');
@@ -39,9 +40,12 @@ export async function setUser() {
         }
     });
     if (password === undefined) return;
-    workspace.getConfiguration('programming-grid').update('info.username', username, true);
-    workspace.getConfiguration('programming-grid').update('info.password', password, true);
+    await Promise.all([
+        workspace.getConfiguration('programming-grid').update('info.username', username, true),
+        workspace.getConfiguration('programming-grid').update('info.password', password, true)
+    ]);
     commands.executeCommand('programming-grid.refresh');
+    await login();
 }
 
 export async function setCourseId() {
@@ -61,7 +65,7 @@ export async function setCourseId() {
     if (typeof result === "undefined") return;
     const id = validator.exec(result)![1];
     console.log(id);
-    workspace.getConfiguration('programming-grid').update('info.courseId', id, true);
+    await workspace.getConfiguration('programming-grid').update('info.courseId', id, true);
     commands.executeCommand('programming-grid.refresh');
 }
 
@@ -100,7 +104,7 @@ const colorMap: {
         'RuntimeError': '255, 0, 255',
         'CompileError': '0, 128, 0',
 
-        'Unknown': '0, 0, 255'
+        'Unknown': '255, 0, 0'
     }
 };
 

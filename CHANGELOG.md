@@ -1,5 +1,6 @@
 # 更新日志
 
-## [Unreleased]
+## 0.0.1
+*2021.8.20*
 
 - Initial release

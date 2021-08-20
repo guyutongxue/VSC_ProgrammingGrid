@@ -1,3 +1,4 @@
+import path = require('path');
 import * as vscode from 'vscode';
 import { getCourseId, getUsername } from './config';
 import { getCourseName } from './fetch';
@@ -19,12 +20,17 @@ export class InfoProvider implements vscode.TreeDataProvider<Info> {
         const result: Info[] = [];
         if (element) return Promise.resolve(result);
         const username = getUsername();
-        if (typeof username === 'undefined') {
-            result.push(new Info("未设置用户名。", "username"));
+        if (username === null) {
+            result.push(new Info("尚未登录", "username"));
         } else {
             result.push(new Info(`用户名：${username}`, "username"));
         }
-        result.push(new Info(`课程：${await getCourseName()}`, "courseId"));
+        const courseName = await getCourseName();
+        if (courseName === null) {
+            result.push(new Info("尚未选择课程", "courseId"));
+        } else {
+            result.push(new Info(`课程：${courseName}`, "courseId"));
+        }
         return Promise.resolve(result);
     }
 }
@@ -33,5 +39,13 @@ class Info extends vscode.TreeItem {
     constructor(public readonly name: string, context: string) {
         super(name, vscode.TreeItemCollapsibleState.None);
         this.contextValue = context;
+        switch (context) {
+            case "username":
+                this.iconPath = path.join(__dirname, "../assets/person-fill.svg");
+                break;
+            case "courseId":
+                this.iconPath = path.join(__dirname, "../assets/list-ul.svg");
+                break;
+        }
     }
 }

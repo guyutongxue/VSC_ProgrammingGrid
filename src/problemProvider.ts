@@ -55,8 +55,17 @@ export class ProblemProvider implements vscode.TreeDataProvider<TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | null | void> = new vscode.EventEmitter<TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-    refresh(): void {
-        this._onDidChangeTreeData.fire();
+    private _problemSets: ProblemSet[] = [];
+
+    refresh(setId?: string): void {
+        if (typeof setId === "undefined") {
+            this._onDidChangeTreeData.fire();
+            return;
+        }
+        const problemSet = this._problemSets.find(problemSet => problemSet.id === setId);
+        if (typeof problemSet !== "undefined") {
+            this._onDidChangeTreeData.fire(problemSet);
+        }
     }
 
     getTreeItem(element: TreeItem): TreeItem {
@@ -68,7 +77,7 @@ export class ProblemProvider implements vscode.TreeDataProvider<TreeItem> {
             return element.getChildren();
         } else {
             const infos = await getProblemSets();
-            return infos.filter(i => {
+            return this._problemSets = infos.filter(i => {
                 if (hideClosedProblems()) {
                     return i.available;
                 } else {

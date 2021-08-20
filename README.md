@@ -1,32 +1,22 @@
-# programming-grid README
+# 编程网格 - VS Code 扩展
 
-This is the README for your extension "programming-grid". After writing up a brief description, we recommend including the following sections.
+**:warning: 仅北大学生使用**
 
-## Features
+> 这才是编程网格在 2020s 应有的模样
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+!\[TODO\]\(\)
 
-For example if there is an image subfolder under your extension project workspace:
+## 使用方法
 
-\!\[feature X\]\(images/feature-x.png\)
+- 设置您的用户名和密码，登录到编程网格；
+- 设置您正在选修的课程；
+- 打开题目，开始编写您的代码：您可以随时本地运行或提交。
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## 扩展设置
 
-## Requirements
-
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
-
-## Extension Settings
-
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: enable/disable this extension
-* `myExtension.thing`: set to `blah` to do something
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
+- `programming-grid.info.username` 登录到编程网格的用户名
+- `programming-grid.info.password` 登录到编程网格的密码
+- `programming-grid.info.courseId` 当前选修的课程 ID
+- `programming-grid.hideClosedProblems` 隐藏关闭的题集
+- `programming-grid.colorTheme` 提交结果的颜色主题，可为“洛谷”(`luogu`)或“北大”(`pku`)
+- `programming-grid.terminalCommand` Linux 系统下启动终端模拟器的命令

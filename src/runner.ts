@@ -7,10 +7,8 @@ import { getEditorCppPath, getEditorExecutablePath } from "./editor";
 import * as terminals from "./terminal_emulators.json";
 import { getTerminalCommand, setTerminalCommand } from "./config";
 
-type CompileResult = {
-    success: true;
-} | {
-    success: false;
+interface CompileResult {
+    success: boolean;
     message: string;
 };
 
@@ -42,10 +40,14 @@ export class Runner implements vscode.Disposable {
         return new Promise<CompileResult>(resolve => {
             cp.execFile("g++", [
                 "-std=c++14",
-                this._editorCppPath,
+                "editor.cpp",
                 "-o",
-                this._editorExecutablePath
-            ], (err, stdout, stderr) => {
+                this._editorExecutablePath,
+                // Clang use -fcolor-diagnostics, GCC use -fdiagnostics-color
+                os.platform() === "darwin" ? "-fcolor-diagnostics" : "-fdiagnostics-color"
+            ], {
+                cwd: path.dirname(this._editorCppPath)
+            }, (err, stdout, stderr) => {
                 if (err) {
                     resolve({
                         success: false,
@@ -53,7 +55,8 @@ export class Runner implements vscode.Disposable {
                     });
                 } else {
                     resolve({
-                        success: true
+                        success: true,
+                        message: stderr
                     });
                 }
             });
@@ -97,14 +100,12 @@ export class Runner implements vscode.Disposable {
         this._getTerminal().sendText(result);
     }
 
-    async run(inputfile?: string): Promise<string | null> {
+    async run(inputfile?: string): Promise<CompileResult> {
         const result = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "编译中...",
             cancellable: false
-        }, () => {
-            return this._compile();
-        });
+        }, () => this._compile());
         console.log(result);
         if (typeof inputfile !== "string") {
             inputfile = "";
@@ -121,11 +122,8 @@ export class Runner implements vscode.Disposable {
             } else {
                 this.runLinux(scriptArg, exeArg, inputfile);
             }
-            return null;
-        } else {
-            vscode.window.showErrorMessage("编译发生错误。");
-            return result.message;
         }
+        return result;
     }
 
     dispose() {

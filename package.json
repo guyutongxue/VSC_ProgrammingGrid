@@ -1,14 +1,27 @@
 {
     "name": "programming-grid",
     "displayName": "编程网格",
-    "description": "",
+    "description": "北京大学校内 OJ 助手",
     "version": "0.0.1",
-    "engines": {
-        "vscode": "^1.59.0"
-    },
+    "preview": true,
     "categories": [
         "Other"
     ],
+    "publisher": "Guyutongxue",
+    "author": "Guyutongxue",
+    "repository": {
+        "url": "https://github.com/Guyutongxue/VSC_ProgrammingGrid"
+    },
+    "license": "MIT",
+    "keywords": [
+        "OJ",
+        "C++",
+        "cpp",
+        "keybindings"
+    ],
+    "engines": {
+        "vscode": "^1.59.0"
+    },
     "activationEvents": [
         "onStartupFinished"
     ],
@@ -21,33 +34,32 @@
             },
             {
                 "command": "programming-grid.submit",
-                "title": "Submit",
+                "category": "Programming Grid",
+                "title": "提交代码",
                 "icon": "$(run-above)"
             },
             {
                 "command": "programming-grid.run",
-                "title": "Run code",
+                "category": "Programming Grid",
+                "title": "本地运行",
                 "icon": "$(run)"
             },
             {
                 "command": "programming-grid.refresh",
                 "category": "Programming Grid",
-                "title": "Refresh Panel",
-                "shortTitle": "刷新面板",
+                "title": "刷新面板",
                 "icon": "$(refresh)"
             },
             {
                 "command": "programming-grid.setCourseId",
                 "category": "Programming Grid",
-                "title": "Set Course",
-                "shortTitle": "设置课程",
+                "title": "设置课程",
                 "icon": "$(edit)"
             },
             {
                 "command": "programming-grid.setUser",
                 "category": "Programming Grid",
-                "title": "Set User",
-                "shortTitle": "设置用户",
+                "title": "设置用户",
                 "icon": "$(edit)"
             }
         ],
@@ -68,7 +80,7 @@
                     "programming-grid.info.courseId": {
                         "type": "string",
                         "pattern": "^([0-9a-f]{32})|",
-                        "description": "当前启用的课程 ID。",
+                        "description": "当前选修的课程 ID。",
                         "default": ""
                     },
                     "programming-grid.hideClosedProblems": {
@@ -76,16 +88,19 @@
                         "default": true,
                         "description": "选中后，已经截止或尚未开始的题集将不会出现在题目列表中。"
                     },
+                    "programming-grid.colorTheme": {
+                        "type": "string",
+                        "enum": [
+                            "luogu",
+                            "pku"
+                        ],
+                        "default": "luogu",
+                        "description": "设置提交结果颜色主题。"
+                    },
                     "programming-grid.terminalCommand": {
                         "type": "string",
                         "default": "",
                         "markdownDescription": "仅 Linux 系统：设置如何启动终端模拟器。用 `$cmd` 代表启动时执行的命令，用 `$args` 代表执行该命令时传入的参数。例：`gnome-terminal -- $cmd $args`。若留空，则工具将尝试自动设置。"
-                    },
-                    "programming-grid.colorTheme": {
-                        "type": "string",
-                        "enum": [ "luogu", "pku" ],
-                        "default": "luogu",
-                        "description": "设置提交结果颜色主题。"
                     }
                 }
             }

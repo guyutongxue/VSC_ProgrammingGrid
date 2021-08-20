@@ -29,14 +29,21 @@ export function activate(context: vscode.ExtensionContext) {
     
         vscode.commands.registerCommand('programming-grid.setUser', setUser),
         vscode.commands.registerCommand('programming-grid.setCourseId', setCourseId),
-        vscode.commands.registerCommand('programming-grid.refresh', () => {
-            infoProvider.refresh();
-            problemProvider.refresh();
+        vscode.commands.registerCommand('programming-grid.refresh', (arg) => {
+            if (typeof arg === "undefined") {
+                infoProvider.refresh();
+                problemProvider.refresh();
+                return;
+            }
+            if (arg.type === "problemSet") {
+                problemProvider.refresh(arg.value);
+            }
         }),
         vscode.commands.registerCommand('programming-grid.run', async (...args) => {
             await editor.save();
             const result = await runner.run(...args);
-            if (result !== null) editor.showCompileError(result);
+            if (!result.success) editor.showCompileInfo('err', result.message);
+            else if (result.message !== "") editor.showCompileInfo('warn', result.message);
         }),
         vscode.commands.registerCommand('programming-grid.submit', () => {
             // debug("https://programming.pku.edu.cn/programming/problem/solution.do?solutionId=303f0a22f360429eb3de257dedea3b00");
