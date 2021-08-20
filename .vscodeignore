@@ -1,5 +1,9 @@
 .vscode/**
 
+out/**
+node_modules/**
+!node_modules/bootstrap/dist/**
+!node_modules/@vscode/codicons/dist/**
 src/**
 .gitignore
 .yarnrc
