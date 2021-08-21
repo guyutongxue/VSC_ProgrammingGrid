@@ -436,6 +436,9 @@ export class EditorController implements vscode.Disposable {
     }
 
     private _saveEditorContent() {
+        if (!fs.existsSync(this._solutionStoragePath)) {
+            createFile(this._solutionStoragePath);
+        }
         fs.copyFileSync(this._editorCppPath, this._solutionStoragePath);
     }
 
