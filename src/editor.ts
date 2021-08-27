@@ -5,6 +5,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import { getStatusInfo } from "./config";
+import { replaceGccDiagnostics } from "gcc-translation";
 
 let storageDir: vscode.Uri;
 let extensionDir: vscode.Uri;
@@ -192,6 +193,11 @@ export class EditorController implements vscode.Disposable {
         .codicon {
             transform: translateY(1.5px);
         }
+
+        /* Add Chinese sans-serif */
+        #compileInfoDetails {
+            font-family: "Sarasa Fixed SC", "等距更纱黑体 SC", "Sarasa Term SC", Inconsolata, Consolas, Menlo, Monaco, "Andale Mono WT", "Andale Mono", "Lucida Console", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Courier New", Courier, "Microsoft YaHei", 微软雅黑, "MicrosoftJhengHei", 华文细黑, STHeiti, MingLiu, "SimHei", monospace;
+        }
     </style>
 </head>
 
@@ -214,25 +220,23 @@ export class EditorController implements vscode.Disposable {
         <main class="mx-3">
             <p></p>
             ${secs}
-            <h5>
-                <strong>样例输入&nbsp;
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-light" title="复制" onclick="p('copy_input')">
-                            <i class="codicon codicon-copy"></i>
-                        </button>
-                        <button class="btn btn-sm btn-light" title="使用样例输入运行本地代码" onclick="p('run_with_input')">
-                            <i class="codicon codicon-play"></i>
-                        </button>
-                    </div>
-                </strong>
-            </h5>
-            <pre class="highlight"><code>${desc.input}</code></pre>
-            <h5>
-                <strong>样例输出&nbsp;
-                    <button class="btn btn-sm btn-light" title="复制" onclick="p('copy_output')">
+            <h5 class="fw-bold">
+                样例输入&nbsp;
+                <div class="btn-group">
+                    <button class="btn btn-sm btn-light" title="复制" onclick="p('copy_input')">
                         <i class="codicon codicon-copy"></i>
                     </button>
-                </strong>
+                    <button class="btn btn-sm btn-light" title="使用样例输入运行本地代码" onclick="p('run_with_input')">
+                        <i class="codicon codicon-play"></i>
+                    </button>
+                </div>
+            </h5>
+            <pre class="highlight"><code>${desc.input}</code></pre>
+            <h5 class="fw-bold">
+                样例输出&nbsp;
+                <button class="btn btn-sm btn-light" title="复制" onclick="p('copy_output')">
+                    <i class="codicon codicon-copy"></i>
+                </button>
             </h5>
             <pre><code>${desc.output}</code></pre>
         </main>
@@ -273,7 +277,7 @@ export class EditorController implements vscode.Disposable {
                             <div id="chineseStamp" class="d-none d-sm-block"></div>
                         </div>
                     </div>
-                    <h5><strong>提示</strong></h5>
+                    <h5 class="fw-bold">提示</h5>
                     <pre><code id="solutionDetails"></code></pre>
                 </div>
             </div>
@@ -287,9 +291,20 @@ export class EditorController implements vscode.Disposable {
                     <button class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <h5><strong>编译器诊断信息</strong></h5>
+                    <div class="d-flex flex-row justify-content-between mb-1">
+                        <h5 class="fw-bold">
+                            编译器诊断信息
+                        </h5>
+                        <div class="form-check" class="translation-ui">
+                            <input class="form-check-input" type="checkbox" id="translationCheck" onchange="translateDetails()">
+                            <label class="form-check-label" for="translationCheck">
+                                翻译为中文
+                            </label>
+                        </div>
+                    </div>
                     <pre><code id="compileInfoDetails"></code></pre>
                     <div class="alert alert-info d-none" id="compileInfoHint"></div>
+                    <div class="translation-ui text-end blockquote-footer">翻译由 gcc-translation 项目提供</div>
                 </div>
             </div>
         </div>
@@ -298,12 +313,19 @@ export class EditorController implements vscode.Disposable {
     <script>
         const solutionModal = new bootstrap.Modal(document.querySelector('#solutionModal'), { keyboard: false });
         const compileErrorModal = new bootstrap.Modal(document.querySelector('#compileErrorModal'), { keyboard: false });
+        // compileErrorModal.show();
         const vscode = acquireVsCodeApi();
         function p(cmd, ...args) {
             vscode.postMessage({
                 command: cmd,
                 args: args
             });
+        }
+        let translated = false;
+        let translationText = ['', ''];
+        function translateDetails() {
+            translated ^= true;
+            document.querySelector('#compileInfoDetails').innerHTML = translationText[translated ? 1 : 0];
         }
         window.addEventListener('message', e => {
             const message = e.data;
@@ -319,7 +341,14 @@ export class EditorController implements vscode.Disposable {
                     solutionModal.show();
                     break;
                 case 'showCompileInfo':
-                    document.querySelector('#compileInfoDetails').innerHTML = message.args[0];
+                    if (Array.isArray(message.args[0])) {
+                        translationText = message.args[0];
+                        document.querySelector('#compileInfoDetails').innerHTML = translationText[translated ? 1 : 0];
+                        document.querySelectorAll('#translationCheckForm').forEach(e => e.classList.remove('d-none'));
+                    } else {
+                        document.querySelector('#compileInfoDetails').innerHTML = message.args[0];
+                        document.querySelectorAll('#translationCheckForm').forEach(e => e.classList.add('d-none'));
+                    }
                     if (message.args[1]) {
                         document.querySelector('#compileInfoHint').classList.remove('d-none');
                         document.querySelector('#compileInfoHint').innerHTML = message.args[1];
@@ -496,7 +525,14 @@ export class EditorController implements vscode.Disposable {
                     hint = "是否定义了 main 函数？请保证源代码中存在一个 main 函数。";
                 }
             }
-            this._postMessageToWebPanel('showCompileInfo', replaceColorToHtml(message), hint);
+            if (os.platform() !== "darwin") {
+                this._postMessageToWebPanel('showCompileInfo', [
+                    replaceColorToHtml(message),
+                    replaceColorToHtml(replaceGccDiagnostics(message, { color: true })),
+                ], hint);
+            } else {
+                this._postMessageToWebPanel('showCompileInfo', replaceColorToHtml(message), hint);
+            }
         }
     }
 
@@ -508,7 +544,8 @@ export class EditorController implements vscode.Disposable {
 }
 
 function replaceColorToHtml(content: string): string {
-    // restore
+    content = content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    // restore color
     return content.replace(/\x1b\[m\x1b\[K/g, `</span>`)
         // error
         .replace(/\x1b\[01;31m\x1b\[K/g, `<span class="fw-bold text-danger">`)

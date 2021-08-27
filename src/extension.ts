@@ -6,7 +6,6 @@ import { setCourseId, setUser } from './config';
 import { ProblemProvider } from './problemProvider';
 import { EditorController, setDirectories } from './editor';
 import { Runner } from './runner';
-import { debug } from './fetch';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -46,7 +45,6 @@ export function activate(context: vscode.ExtensionContext) {
             else if (result.message !== "") editor.showCompileInfo('warn', result.message);
         }),
         vscode.commands.registerCommand('programming-grid.submit', () => {
-            // debug("https://programming.pku.edu.cn/programming/problem/solution.do?solutionId=303f0a22f360429eb3de257dedea3b00");
             editor.submit();
         }),
         vscode.commands.registerCommand('programming-grid.openProblem', (info) => {

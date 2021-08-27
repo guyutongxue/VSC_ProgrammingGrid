@@ -40,6 +40,8 @@ export class Runner implements vscode.Disposable {
         return new Promise<CompileResult>(resolve => {
             cp.execFile("g++", [
                 "-std=c++14",
+                "-Wall",
+                "-Wextra",
                 "editor.cpp",
                 "-o",
                 this._editorExecutablePath,
@@ -101,6 +103,13 @@ export class Runner implements vscode.Disposable {
     }
 
     async run(inputfile?: string): Promise<CompileResult> {
+        if (!commandExists("g++")) {
+            const result = await vscode.window.showErrorMessage("未发现已安装的 g++ 编译器。", "查看解决方案");
+            if (result === "查看解决方案") {
+                vscode.env.openExternal(vscode.Uri.parse("https://gitee.com/Guyutongxue/VSC_ProgrammingGrid/blob/main/install_compiler.md"));
+            }
+            return { success: false, message: "未发现已安装的 g++ 编译器。" };
+        }
         const result = await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "编译中...",

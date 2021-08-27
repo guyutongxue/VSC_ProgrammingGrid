@@ -4,7 +4,7 @@
 
 > 这才是编程网格在 2020s 应有的模样
 
-!\[TODO\]\(\)
+![snapshot](https://z3.ax1x.com/2021/08/21/fzkPC6.png)
 
 ## 使用方法
 
