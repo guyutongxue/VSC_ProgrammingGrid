@@ -344,10 +344,10 @@ export class EditorController implements vscode.Disposable {
                     if (Array.isArray(message.args[0])) {
                         translationText = message.args[0];
                         document.querySelector('#compileInfoDetails').innerHTML = translationText[translated ? 1 : 0];
-                        document.querySelectorAll('#translationCheckForm').forEach(e => e.classList.remove('d-none'));
+                        document.querySelectorAll('.translation-ui').forEach(e => e.classList.remove('d-none'));
                     } else {
                         document.querySelector('#compileInfoDetails').innerHTML = message.args[0];
-                        document.querySelectorAll('#translationCheckForm').forEach(e => e.classList.add('d-none'));
+                        document.querySelectorAll('.translation-ui').forEach(e => e.classList.add('d-none'));
                     }
                     if (message.args[1]) {
                         document.querySelector('#compileInfoHint').classList.remove('d-none');
