@@ -20,7 +20,7 @@ export function activate(context: vscode.ExtensionContext) {
     const editor = new EditorController();
     const runner = new Runner();
 
-    let disposables = [
+    let disposables: vscode.Disposable[] = [
         vscode.window.registerTreeDataProvider('pgInfo', infoProvider),
         vscode.window.registerTreeDataProvider('pgProblems', problemProvider),
         editor,

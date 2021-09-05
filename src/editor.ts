@@ -1,4 +1,4 @@
-import { debug, getDescription, ProblemDescription, submitCode } from "./fetch";
+import { getDescription, ProblemDescription, submitCode } from "./fetch";
 import { IProblemInfo } from "./problemProvider";
 import * as vscode from "vscode";
 import * as fs from "fs";
@@ -111,11 +111,60 @@ export class EditorController implements vscode.Disposable {
     <style>
         :root {
             --status-color: 82, 196, 26;
+            /* Pure black cause too high contrast */
+            --dark-bg-color: #101010
+        }
+
+        .dark {
+            color: white;
+        }
+
+        body.dark {
+            background-color: var(--dark-bg-color);
+        }
+
+        #mainHeader {
+            background-color: white;
+        }
+
+        .dark .modal-content,
+        .dark #mainHeader {
+            background-color: var(--dark-bg-color);
+        }
+        
+        .dark .btn-close {
+            color: white;
+            background: transparent url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxNiAxNicgZmlsbD0nI2ZmZic+PHBhdGggZD0nTS4yOTMuMjkzYTEgMSAwIDAxMS40MTQgMEw4IDYuNTg2IDE0LjI5My4yOTNhMSAxIDAgMTExLjQxNCAxLjQxNEw5LjQxNCA4bDYuMjkzIDYuMjkzYTEgMSAwIDAxLTEuNDE0IDEuNDE0TDggOS40MTRsLTYuMjkzIDYuMjkzYTEgMSAwIDAxLTEuNDE0LTEuNDE0TDYuNTg2IDggLjI5MyAxLjcwN2ExIDEgMCAwMTAtMS40MTR6Jy8+PC9zdmc+) center/1em auto no-repeat;
         }
 
         pre {
             background-color: var(--bs-light);
             padding: 1rem 1.5rem;
+        }
+
+        .dark pre {
+            background-color: var(--bs-dark);
+        }
+
+        .dark .dropdown-menu {
+            background-color: black;
+            color: #dedad6;
+            border: 1px solid rgba(255,255,255,.15);
+        }
+
+        .dark .dropdown-item {
+            color: #dedad6;
+        }
+
+        .dark .dropdown-item:focus,
+        .dark .dropdown-item:hover {
+            color: #e1deda;
+            background-color: #161310;
+        }
+
+        .dark .dropdown-item:active {
+            color: white;
+            background-color: #0d6efd;
         }
 
         .status-block {
@@ -179,7 +228,8 @@ export class EditorController implements vscode.Disposable {
         }
 
         .diag-warning {
-            color: #fd7e14; /* instead of text-warning */
+            color: #fd7e14;
+            /* instead of text-warning */
         }
 
         .diag-range1 {
@@ -203,8 +253,8 @@ export class EditorController implements vscode.Disposable {
 
 <body>
     <article class="container-md">
-        <header
-            class="p-3 pb-2 sticky-top bg-white border-bottom border-3 d-flex flex-direction-row justify-content-between align-items-center">
+        <header id="mainHeader"
+            class="p-3 pb-2 sticky-top border-bottom border-3 d-flex flex-direction-row justify-content-between align-items-center">
             <h1 class="text-break">${desc.title}</h1>
             <div class="btn-group mb-1 flex-shrink-0">
                 <button class="btn btn-light" title="本地运行代码" onclick="p('run')">
@@ -251,6 +301,10 @@ export class EditorController implements vscode.Disposable {
                             <i class="codicon codicon-browser"></i>
                             打开原网页
                         </span></li>
+                    <li><span class="dropdown-item" onclick="p('history')">
+                            <i class="codicon codicon-history"></i>
+                            提交历史
+                        </span></li>
                     <li><span class="dropdown-item" onclick="p('open_editor')">
                             <i class="codicon codicon-edit"></i>
                             显示编辑器
@@ -296,21 +350,32 @@ export class EditorController implements vscode.Disposable {
                             编译器诊断信息
                         </h5>
                         <div class="form-check" class="translation-ui">
-                            <input class="form-check-input" type="checkbox" id="translationCheck" onchange="translateDetails()">
+                            <input class="form-check-input" type="checkbox" id="translationCheck"
+                                onchange="translateDetails()">
                             <label class="form-check-label" for="translationCheck">
                                 翻译为中文
                             </label>
                         </div>
                     </div>
                     <pre><code id="compileInfoDetails"></code></pre>
+                    <div class="translation-ui text-end blockquote-footer">翻译由 <a href="javascript:void 0" onclick="p('browser', 'https://github.com/Guyutongxue/gcc-translation')" >gcc-translation</a> 项目提供</div>
                     <div class="alert alert-info d-none" id="compileInfoHint"></div>
-                    <div class="translation-ui text-end blockquote-footer">翻译由 gcc-translation 项目提供</div>
                 </div>
             </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        const themeAttr = document.body.attributes.getNamedItem('data-vscode-theme-kind');
+        if (themeAttr != null) {
+            if (themeAttr.value !== "vscode-light") {
+                document.body.classList.add("dark");
+                document.querySelectorAll(".btn-light").forEach(function (e) {
+                    e.classList.remove("btn-light");
+                    e.classList.add("btn-dark");
+                });
+            }
+        }
         const solutionModal = new bootstrap.Modal(document.querySelector('#solutionModal'), { keyboard: false });
         const compileErrorModal = new bootstrap.Modal(document.querySelector('#compileErrorModal'), { keyboard: false });
         // compileErrorModal.show();
@@ -398,6 +463,15 @@ export class EditorController implements vscode.Disposable {
                             vscode.env.openExternal(vscode.Uri.parse(`https://programming.pku.edu.cn/programming/problem/${info.id}/show.do?problemsId=${info.setId}`));
                         }
                         return;
+                    case 'history':
+                        if (this._currentProblem !== null) {
+                            const info = this._currentProblem;
+                            vscode.env.openExternal(vscode.Uri.parse(`https://programming.pku.edu.cn/programming/problem/submit.history?problemId=${info.id}&problemsId=${info.setId}`));
+                        }
+                        return;
+                    case 'browser':
+                        vscode.env.openExternal(vscode.Uri.parse(message.args[0]));
+                        return;
                     case 'open_editor':
                         this.openEditor();
                         return;
@@ -482,7 +556,15 @@ export class EditorController implements vscode.Disposable {
         await this.save();
         if (this._currentProblem === null) return;
         const code = getContent(this._editorCppPath);
-        const result = await debug("https://programming.pku.edu.cn/programming/problem/solution.do?solutionId=ccae1e10df8f4ce9a255e0a9cfab86ce");
+        if (code.trim() === "") {
+            vscode.window.showErrorMessage("代码不能为空。");
+            return;
+        }
+        if (/\bsystem\b/.test(code)) {
+            vscode.window.showErrorMessage("编程网格拒绝带有 system 单词的代码。");
+            return;
+        }
+        const result = await submitCode(this._currentProblem, code);
         // const result = await submitCode(this._currentProblem, code);
         if (result === null) return;
         // Get average performance

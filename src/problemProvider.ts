@@ -28,9 +28,9 @@ class Problem extends TreeItem {
             arguments: [this.info]
         };
         if (info.status === 'ac') {
-            this.iconPath = path.join(__dirname, '../assets/check2.svg');
+            this.iconPath = new vscode.ThemeIcon('check');
         } else if (info.status === 'wa') {
-            this.iconPath = path.join(__dirname, '../assets/x.svg');
+            this.iconPath = new vscode.ThemeIcon('close');
         }
     }
 }

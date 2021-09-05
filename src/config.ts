@@ -2,19 +2,19 @@ import { commands, window, workspace } from 'vscode';
 import { login } from './fetch';
 
 export function getUsername() {
-    const result: string | undefined = workspace.getConfiguration('programming-grid').get('info.username');
+    const result = workspace.getConfiguration('programming-grid').get<string>('info.username');
     if (result === "") return null;
     return result ?? null;
 }
 
 export function getPassword() {
-    const result: string | undefined = workspace.getConfiguration('programming-grid').get('info.password');
+    const result = workspace.getConfiguration('programming-grid').get<string>('info.password');
     if (result === "") return null;
     return result ?? null;
 }
 
 export function getCourseId() {
-    const result: string | undefined = workspace.getConfiguration('programming-grid').get('info.courseId');
+    const result = workspace.getConfiguration('programming-grid').get<string>('info.courseId');
     if (result === "") return null;
     return result ?? null;
 }
@@ -70,12 +70,12 @@ export async function setCourseId() {
 }
 
 export function hideClosedProblems() {
-    const hidden: boolean | undefined = workspace.getConfiguration('programming-grid').get('hideClosedProblems');
+    const hidden = workspace.getConfiguration('programming-grid').get<boolean>('hideClosedProblems');
     return hidden ?? true;
 }
 
 export function getTerminalCommand() {
-    const command: string | undefined = workspace.getConfiguration('programming-grid').get('terminalCommand');
+    const command = workspace.getConfiguration('programming-grid').get<string>('terminalCommand');
     return command ?? "";
 }
 export function setTerminalCommand(value: string) {
@@ -109,7 +109,7 @@ const colorMap: {
 };
 
 function getStatusColor(status: string) {
-    const theme: string = workspace.getConfiguration('programming-grid').get('colorTheme') ?? 'luogu';
+    const theme = workspace.getConfiguration('programming-grid').get<string>('colorTheme') ?? 'luogu';
     const colors = colorMap[theme] ?? colorMap['luogu'];
     return colors[status] ?? colors['Unknown'];
 }

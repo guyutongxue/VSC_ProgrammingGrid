@@ -41,10 +41,10 @@ class Info extends vscode.TreeItem {
         this.contextValue = context;
         switch (context) {
             case "username":
-                this.iconPath = path.join(__dirname, "../assets/person-fill.svg");
+                this.iconPath = new vscode.ThemeIcon('account');
                 break;
             case "courseId":
-                this.iconPath = path.join(__dirname, "../assets/list-ul.svg");
+                this.iconPath = new vscode.ThemeIcon('book');
                 break;
         }
     }

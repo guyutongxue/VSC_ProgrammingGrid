@@ -138,7 +138,7 @@ async function tryFetch(url: string, options: RequestInit, decode = true): Promi
         if (r.status === 404) {
             continue;
         }
-        const buf = await r.buffer();
+        const buf = await r.clone().buffer();
         const text = iconv.decode(buf, 'gb2312');
         const $ = cheerio.load(text);
         if ($('[name="accessDeny"]').length > 0) {
@@ -194,7 +194,7 @@ export async function getProblems(setId: string) {
             if (result === null) return null;
             const pId = result[1];
             const font = $(this).find("font");
-            const status = font.length === 0 ? undefined : font.attr('color') === 'red' ? 'wa' : 'ac' ;
+            const status = font.length === 0 ? undefined : font.attr('color') === 'red' ? 'wa' : 'ac';
             return <IProblemInfo>{
                 id: pId,
                 setId: setId,
@@ -274,34 +274,6 @@ export async function getDescription(info: IProblemInfo) {
     });
 }
 
-// TODO: inline in `submitCode` when server is on
-function parseSolutionPage(text: string): SolutionDescription | null {
-    const $ = cheerio.load(text);
-    const status = $('.showtitle').text().trim();
-    const values = $('.fieldvalue');
-    if (values.length !== 3) return null;
-    const details = values.eq(1).children().html();
-    return {
-        status: status,
-        details: details ?? ""
-    };
-}
-
-// TODO: remove this when server is on
-export async function debug(page: string) {
-    return tryFetch(page, {
-        headers
-    }).then(text => {
-        if (text === null) {
-            vscode.window.showErrorMessage("获取失败");
-            return null;
-        }
-        const r = parseSolutionPage(text);
-        console.log(r);
-        return r;
-    });
-}
-
 export function submitCode(info: IProblemInfo, code: string) {
     const page = `https://programming.pku.edu.cn/programming/problem/submit.do`;
     const data = new URLSearchParams();
@@ -309,11 +281,6 @@ export function submitCode(info: IProblemInfo, code: string) {
     data.append('problemsId', info.setId);
     data.append('sourceCode', code);
     data.append('programLanguage', 'C++');
-    // TODO: move to the end of this function when server is on
-    vscode.commands.executeCommand("programming-grid.refresh", {
-        type: "problemSet",
-        value: info.setId
-    });
     return tryFetch(page, {
         method: "POST",
         headers: {
@@ -321,7 +288,7 @@ export function submitCode(info: IProblemInfo, code: string) {
             "Content-Type": "application/x-www-form-urlencoded"
         },
         body: data.toString()
-    }, false).then(async r => {
+    }, false).then(async (r) => {
         if (r === null) {
             vscode.window.showErrorMessage("提交失败，请检查是否拥有访问该课程的权限。");
             return null;
@@ -330,7 +297,32 @@ export function submitCode(info: IProblemInfo, code: string) {
             vscode.window.showErrorMessage("提交失败。可能是编程网格服务器出现问题，请稍后再试。");
             return null;
         }
-        const text = iconv.decode(await r.buffer(), "gb2312");
-        return parseSolutionPage(text);
+        const text = iconv.decode(await r?.buffer(), "gb2312");
+        const $ = cheerio.load(text);
+        // "system" in source code, redirect to home page
+        if (!r.url.includes("solutionId")) {
+            vscode.window.showErrorMessage("编程网格拒绝服务。可能的原因是输入了不允许的字符序列。");
+            return null;
+        }
+        // "No source code" hint
+        if ($("td.t").length > 0) {
+            const msg = $("td.t").text();
+            vscode.window.showErrorMessage(msg);
+            return null;
+        }
+        const status = $('.showtitle').text().trim();
+        const values = $('.fieldvalue');
+        if (values.length !== 3) return null;
+        const details = values.eq(1).children().html();
+        
+        vscode.commands.executeCommand("programming-grid.refresh", {
+            type: "problemSet",
+            value: info.setId
+        });
+
+        return {
+            status: status,
+            details: details ?? ""
+        };
     });
 }

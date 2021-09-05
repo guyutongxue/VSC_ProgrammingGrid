@@ -2,7 +2,7 @@
     "name": "programming-grid",
     "displayName": "编程网格",
     "description": "北京大学校内 OJ 助手",
-    "version": "0.0.3",
+    "version": "0.1.0",
     "preview": true,
     "categories": [
         "Other"
@@ -216,7 +216,7 @@
         "bootstrap": "^5.1.0",
         "cheerio": "^1.0.0-rc.10",
         "command-exists": "^1.2.9",
-        "gcc-translation": "https://github.com/Guyutongxue/gcc-translation/tarball/899f35f37d943b1a67c1f3f7212abb69c17af55c",
+        "gcc-translation": "https://github.com/Guyutongxue/gcc-translation/tarball/19ce0715e40dc3397a5c9d4b33a120ab2ab10ede",
         "fetch-cookie": "^1.0.0",
         "iconv-lite": "^0.6.3",
         "mime": "^2.5.2",
