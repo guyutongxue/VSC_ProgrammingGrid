@@ -208,10 +208,10 @@ export async function getProblems(setId: string) {
 
 export interface ProblemDescription {
     title: string;
-    sections: {
-        title: string;
-        content: string;
-    }[];
+    description: string;
+    aboutInput: string;
+    aboutOutput: string;
+    hint: string;
     input: string;
     output: string;
 };
@@ -228,58 +228,62 @@ export async function getDescription(info: IProblemInfo) {
     }).then(async text => {
         if (text === null) return null;
         const $ = cheerio.load(text);
-        $('.highin,.highout').children('br').remove();
-        const mainContent = $(".fieldname,.fieldvalue");
-        const length = mainContent.length;
-        if (length < 4) return null;
-        const descRaw = mainContent.slice(1, length - 3);
+        // $('.highin,.highout').children('br').remove();
+        // const mainContent = $(".fieldname,.fieldvalue");
+        // const length = mainContent.length;
+        // if (length < 4) return null;
+        // const descRaw = mainContent.slice(1, length - 3);
+        // for (const i of descRaw) {
+        //     if ($(i).hasClass('fieldname')) {
+        //         r.sections.push({
+        //             title: $(i).text(),
+        //             content: ""
+        //         });
+        //     }
+        //     if ($(i).hasClass('fieldvalue')) {
+        //         // Replace img source
+        //         // $.each doesn't support async, so gather all promises here
+        const promises: Promise<void>[] = [];
+        $("#problemDescription,#aboutinput,#aboutOutput,#problemHint").find("img").each(function (_) {
+            const src = $(this).attr("src");
+            if (typeof src === "undefined") return;
+            promises.push(getImage((new URL(src, page)).href).then(base64 => {
+                $(this).attr("src", base64);
+            }));
+        });
+        //         // Remove extra empty pre
+        //         $(i).find("pre").filter(function (_) {
+        //             return $(this).text() === "";
+        //         }).each(function (_) {
+        //             $(this).remove();
+        //         });
+        await Promise.all(promises);
+        //         r.sections[r.sections.length - 1].content = $(i).html() ?? "";
+        //     }
+        // }
+        // r.input = $('.highin').text();
+        // r.output = $('.highout').text();
         const r: ProblemDescription = {
-            title: info.text,
-            sections: [],
-            input: "",
-            output: ""
+            title: $("#problemTitle").text(),
+            description: $("#problemDescription").html() ?? "",
+            aboutInput: $("#aboutInput").html() ?? "",
+            aboutOutput: $("#aboutOutput").html() ?? "",
+            hint: $("#problemHint").html() ?? "",
+            input: $("#sampleInput").text(),
+            output: $("#sampleOutput").text()
         };
-        for (const i of descRaw) {
-            if ($(i).hasClass('fieldname')) {
-                r.sections.push({
-                    title: $(i).text(),
-                    content: ""
-                });
-            }
-            if ($(i).hasClass('fieldvalue')) {
-                // Replace img source
-                // $.each doesn't support async, so gather all promises here
-                const promises: Promise<void>[] = [];
-                $(i).find("img").each(function (_) {
-                    const src = $(this).attr("src");
-                    if (typeof src === "undefined") return;
-                    promises.push(getImage((new URL(src, page)).href).then(base64 => {
-                        $(this).attr("src", base64);
-                    }));
-                });
-                // Remove extra empty pre
-                $(i).find("pre").filter(function (_) {
-                    return $(this).text() === "";
-                }).each(function (_) {
-                    $(this).remove();
-                });
-                await Promise.all(promises);
-                r.sections[r.sections.length - 1].content = $(i).html() ?? "";
-            }
-        }
-        r.input = $('.highin').text();
-        r.output = $('.highout').text();
         console.log(r);
         return r;
     });
 }
 
 export function submitCode(info: IProblemInfo, code: string) {
+    const HEADER_COMMENT = "// Submitted by 'Programming Grid' VS Code Extension\n\n";
     const page = `https://programming.pku.edu.cn/programming/problem/submit.do`;
     const data = new URLSearchParams();
     data.append('problemId', info.id);
     data.append('problemsId', info.setId);
-    data.append('sourceCode', code);
+    data.append('sourceCode', HEADER_COMMENT + code);
     data.append('programLanguage', 'C++');
     return tryFetch(page, {
         method: "POST",
@@ -314,7 +318,7 @@ export function submitCode(info: IProblemInfo, code: string) {
         const values = $('.fieldvalue');
         if (values.length !== 3) return null;
         const details = values.eq(1).children().html();
-        
+
         vscode.commands.executeCommand("programming-grid.refresh", {
             type: "problemSet",
             value: info.setId

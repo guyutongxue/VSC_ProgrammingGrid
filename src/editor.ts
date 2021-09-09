@@ -94,10 +94,15 @@ export class EditorController implements vscode.Disposable {
     private _getProblemHtml(): string {
         const desc = this._currentProblemDescription;
         if (this._webPanel === null || desc === null) return "";
-        const secs = desc.sections.map(sec => {
-            if (["来源", "例子输入", "例子输出"].includes(sec.title)) return "";
-            return `<h5><strong>${sec.title}</strong></h5><p>${sec.content}</p>`;
-        }).join("\n");
+        // const secs = desc.sections.map(sec => {
+        //     if (["来源", "例子输入", "例子输出"].includes(sec.title)) return "";
+        //     return `<h5><strong>${sec.title}</strong></h5><p>${sec.content}</p>`;
+        // }).join("\n");
+
+        const description = desc.description ? `<h5 class="fw-bold">描述</h5><p>${desc.description}</p>` : "";
+        const aboutInput = desc.aboutInput ? `<h5 class="fw-bold">关于输入</h5><p>${desc.aboutInput}</p>` : "";
+        const aboutOutput = desc.aboutOutput ? `<h5 class="fw-bold">关于输出</h5><p>${desc.aboutOutput}</p>` : "";
+        const hint = desc.hint ? `<h5 class="fw-bold">提示</h5><p>${desc.hint}</p>` : "";
         const wv = this._webPanel.webview;
         return `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -269,7 +274,10 @@ export class EditorController implements vscode.Disposable {
         </header>
         <main class="mx-3">
             <p></p>
-            ${secs}
+            ${description}
+            ${aboutInput}
+            ${aboutOutput}
+            ${hint}
             <h5 class="fw-bold">
                 样例输入&nbsp;
                 <div class="btn-group">
@@ -509,7 +517,7 @@ export class EditorController implements vscode.Disposable {
         }
         this._webPanel!.webview.html = this._getProblemHtml();
         // sleep 0.1s to let webview panel fully loaded
-        setTimeout(() => this.openEditor(), 100);
+        await new Promise<void>((r) => setTimeout(() => (this.openEditor(), r()), 100));
     }
 
 
@@ -554,7 +562,15 @@ export class EditorController implements vscode.Disposable {
 
     async submit() {
         await this.save();
-        if (this._currentProblem === null) return;
+        if (this._currentProblem === null) {
+            vscode.window.showErrorMessage("请先打开一个题目。");
+            return;
+        }
+        if (this._webPanel === null) {
+            await this._closeExisted();
+            await this.openProblem(this._currentProblem);
+            await new Promise<void>((r) => setTimeout(() => (r()), 1000));
+        }
         const code = getContent(this._editorCppPath);
         if (code.trim() === "") {
             vscode.window.showErrorMessage("代码不能为空。");
@@ -590,32 +606,34 @@ export class EditorController implements vscode.Disposable {
         });
     }
 
-    showCompileInfo(type: "warn" | "err", message: string) {
+    async showCompileInfo(type: "warn" | "err", message: string) {
         const description = type === "warn" ? "存在警告" : "发生错误";
         const show = type === "warn" ? vscode.window.showWarningMessage : vscode.window.showErrorMessage;
+        if (this._currentProblem === null) return;
         if (this._webPanel === null) {
-            show(`编译${description}：请打开编程网格页面以显示更多信息。`);
-            return;
-        } else {
-            show(`编译${description}。`);
-            let hint = "";
-            if (type === "err" && message.search(/error: ld returned 1 exit status$/m) !== -1) {
-                if (message.search(/Permission denied$/m) !== -1) {
-                    hint = "是否已有正在运行的程序？请在编译之前关闭正在运行的窗口。";
-                }
-                if (message.search(/undefined reference to `(WinMain|main)'$/m) !== -1) {
-                    hint = "是否定义了 main 函数？请保证源代码中存在一个 main 函数。";
-                }
+            await this._closeExisted();
+            await this.openProblem(this._currentProblem);
+            await new Promise<void>((r) => setTimeout(() => (r()), 1000));
+        }
+        show(`编译${description}。`);
+        let hint = "";
+        if (type === "err" && message.search(/error: ld returned 1 exit status$/m) !== -1) {
+            if (message.search(/Permission denied$/m) !== -1) {
+                hint = "是否已有正在运行的程序？请在编译之前关闭正在运行的窗口。";
             }
-            if (os.platform() !== "darwin") {
-                this._postMessageToWebPanel('showCompileInfo', [
-                    replaceColorToHtml(message),
-                    replaceColorToHtml(replaceGccDiagnostics(message, { color: true })),
-                ], hint);
-            } else {
-                this._postMessageToWebPanel('showCompileInfo', replaceColorToHtml(message), hint);
+            if (message.search(/undefined reference to `(WinMain|main)'$/m) !== -1) {
+                hint = "是否定义了 main 函数？请保证源代码中存在一个 main 函数。";
             }
         }
+        if (os.platform() !== "darwin") {
+            this._postMessageToWebPanel('showCompileInfo', [
+                replaceColorToHtml(message),
+                replaceColorToHtml(replaceGccDiagnostics(message, { color: true })),
+            ], hint);
+        } else {
+            this._postMessageToWebPanel('showCompileInfo', replaceColorToHtml(message), hint);
+        }
+
     }
 
     dispose() {

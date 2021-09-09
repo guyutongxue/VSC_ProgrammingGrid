@@ -1,5 +1,10 @@
 # 更新日志
 
+## 0.1.2
+*2021.9.10*
+- Faster: use new-added API
+- Try open problem when submit/compile without a webview. (Not reliable)
+
 ## 0.1.1
 *2021.9.9*
 - macOS support.
