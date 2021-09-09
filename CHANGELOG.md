@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.1.1
+*2021.9.9*
+- macOS support.
+
 ## 0.1.0
 *2021.9.5*
 - Server is on. Now all features are available.

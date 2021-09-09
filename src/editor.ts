@@ -349,7 +349,7 @@ export class EditorController implements vscode.Disposable {
                         <h5 class="fw-bold">
                             编译器诊断信息
                         </h5>
-                        <div class="form-check" class="translation-ui">
+                        <div class="form-check translation-ui">
                             <input class="form-check-input" type="checkbox" id="translationCheck"
                                 onchange="translateDetails()">
                             <label class="form-check-label" for="translationCheck">
@@ -560,8 +560,8 @@ export class EditorController implements vscode.Disposable {
             vscode.window.showErrorMessage("代码不能为空。");
             return;
         }
-        if (/\bsystem\b/.test(code)) {
-            vscode.window.showErrorMessage("编程网格拒绝带有 system 单词的代码。");
+        if (/\b(system|fork)\b/.test(code)) {
+            vscode.window.showErrorMessage("编程网格拒绝带有 system、fork 等单词的代码。");
             return;
         }
         const result = await submitCode(this._currentProblem, code);
@@ -627,24 +627,51 @@ export class EditorController implements vscode.Disposable {
 
 function replaceColorToHtml(content: string): string {
     content = content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    // restore color
-    return content.replace(/\x1b\[m\x1b\[K/g, `</span>`)
-        // error
-        .replace(/\x1b\[01;31m\x1b\[K/g, `<span class="fw-bold text-danger">`)
-        // warning
-        .replace(/\x1b\[01;35m\x1b\[K/g, `<span class="fw-bold diag-warning">`)
-        // note, path
-        .replace(/\x1b\[01;36m\x1b\[K/g, `<span class="fw-bold text-primary">`)
-        // range1 (green)
-        .replace(/\x1b\[32m\x1b\[K/g, `<span class="diag-range1">`)
-        // range2 (blue)
-        .replace(/\x1b\[34m\x1b\[K/g, `<span class="diag-range2">`)
-        // locus, quote
-        .replace(/\x1b\[01m\x1b\[K/g, `<span class="fw-bold">`)
-        // fixit-insert
-        .replace(/\x1b\[32m\x1b\[K/g, `<span class="text-success">`)
-        // fixit-delete
-        .replace(/\x1b\[31m\x1b\[K/g, `<span class="text-danger">`)
-        // type-diff
-        .replace(/\x1b\[01;32m\x1b\[K/g, `<span class="fw-bold dg-range1">`);
+    if (os.platform() !== "darwin") {
+        // reset color
+        return content.replace(/\x1b\[m\x1b\[K/g, `</span>`)
+            // error
+            .replace(/\x1b\[01;31m\x1b\[K/g, `<span class="fw-bold text-danger">`)
+            // warning
+            .replace(/\x1b\[01;35m\x1b\[K/g, `<span class="fw-bold diag-warning">`)
+            // note, path
+            .replace(/\x1b\[01;36m\x1b\[K/g, `<span class="fw-bold text-primary">`)
+            // range1 (green)
+            .replace(/\x1b\[32m\x1b\[K/g, `<span class="diag-range1">`)
+            // range2 (blue)
+            .replace(/\x1b\[34m\x1b\[K/g, `<span class="diag-range2">`)
+            // locus, quote
+            .replace(/\x1b\[01m\x1b\[K/g, `<span class="fw-bold">`)
+            // fixit-insert
+            .replace(/\x1b\[32m\x1b\[K/g, `<span class="text-success">`)
+            // fixit-delete
+            .replace(/\x1b\[31m\x1b\[K/g, `<span class="text-danger">`)
+            // type-diff
+            .replace(/\x1b\[01;32m\x1b\[K/g, `<span class="fw-bold dg-range1">`);
+    } else {
+        // reset color
+        return content.replace(/\x1b\[0m/g, `</span>`)
+            // diag text
+            .replace(/\x1b\[1m/g, `<span class="fw-bold">`)
+            // error
+            .replace(/\x1b\[0;1;31m/g, `<span class="fw-bold text-danger">`)
+            // warning
+            .replace(/\x1b\[0;1;35m/g, `<span class="fw-bold diag-warning">`)
+            // note, path
+            .replace(/\x1b\[0;1;36m/g, `<span class="fw-bold text-primary">`)
+            // range1 (green)
+            .replace(/\x1b\[0;1;32m/g, `<span class="fw-bold diag-range1">`)
+            // range2 (blue)
+            .replace(/\x1b\[0;1;34m/g, `<span class="fw-bold diag-range2">`)
+            // // locus, quote
+            // .replace(/\x1b\[01m\x1b\[K/g, `<span class="fw-bold">`)
+            // // fixit-insert
+            // .replace(/\x1b\[32m\x1b\[K/g, `<span class="text-success">`)
+            // // fixit-delete
+            // .replace(/\x1b\[31m\x1b\[K/g, `<span class="text-danger">`)
+            // // type-diff
+            // .replace(/\x1b\[01;32m\x1b\[K/g, `<span class="fw-bold dg-range1">`)
+            ;
+
+    }
 }
