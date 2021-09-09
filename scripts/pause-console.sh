@@ -17,10 +17,10 @@ function set-title() {
 set-title $1
 if [[ $# -eq 1 ]]; then
     start_time="$(date -u +%s.%4N)"
-    $1
+    "$1"
 else
     start_time="$(date -u +%s.%4N)"
-    $1 < $2
+    "$1" < "$2"
 fi
 exit_code=$?
 end_time="$(date -u +%s.%4N)"

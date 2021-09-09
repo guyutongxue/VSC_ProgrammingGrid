@@ -16,6 +16,7 @@ export class Runner implements vscode.Disposable {
     private readonly _editorCppPath: string;
     private readonly _editorExecutablePath: string;
     private readonly _pauseScriptPath: string;
+    private readonly _pauseScriptLauncherPath: string;
 
     private _runTerminal: vscode.Terminal | null = null;
     private _closeTerminalListener: vscode.Disposable;
@@ -25,9 +26,12 @@ export class Runner implements vscode.Disposable {
         this._editorExecutablePath = getEditorExecutablePath();
         if (os.platform() === "win32") {
             this._pauseScriptPath = path.join(__dirname, "../scripts/pause-console.ps1");
+        } else if (os.platform() === "darwin") {
+            this._pauseScriptPath = path.join(__dirname, "../scripts/pause-console.rb");
         } else {
             this._pauseScriptPath = path.join(__dirname, "../scripts/pause-console.sh");
         }
+        this._pauseScriptLauncherPath = path.join(__dirname, "../scripts/pause-console-launcher.sh");
 
         this._closeTerminalListener = vscode.window.onDidCloseTerminal(t => {
             if (t === this._runTerminal) {
@@ -78,8 +82,8 @@ export class Runner implements vscode.Disposable {
         this._getTerminal().sendText(`START C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\powershell.exe -ExecutionPolicy ByPass -NoProfile -File ${scriptArg} ${exeArg} ${inputArg}`);
     }
 
-    runMac(scriptArg: string, exeArg: string, inputArg: string) {
-        this._getTerminal().sendText(`open -a Terminal.app ${scriptArg} ${exeArg} ${inputArg}`);
+    runMac(launcherArg: string, exeArg: string, inputArg: string) {
+        this._getTerminal().sendText(`${launcherArg} ${exeArg} ${inputArg}`);
     }
 
     runLinux(scriptArg: string, exeArg: string, inputArg: string) {
@@ -127,7 +131,8 @@ export class Runner implements vscode.Disposable {
             if (os.platform() === "win32") {
                 this.runWindows(scriptArg, exeArg, inputfile);
             } else if (os.platform() === "darwin") {
-                this.runMac(scriptArg, exeArg, inputfile);
+                const launcherArg = JSON.stringify(this._pauseScriptLauncherPath);
+                this.runMac(launcherArg, exeArg, inputfile);
             } else {
                 this.runLinux(scriptArg, exeArg, inputfile);
             }
