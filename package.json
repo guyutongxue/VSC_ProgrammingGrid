@@ -2,7 +2,7 @@
     "name": "programming-grid",
     "displayName": "编程网格",
     "description": "北京大学校内 OJ 助手",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "preview": true,
     "categories": [
         "Other"
@@ -69,12 +69,12 @@
                 "properties": {
                     "programming-grid.info.username": {
                         "type": "string",
-                        "description": "登录到编程网格的用户名。",
+                        "description": "登录到北大个人门户的学号。",
                         "default": ""
                     },
                     "programming-grid.info.password": {
                         "type": "string",
-                        "description": "登录到编程网格的密码。扩展只会将此密码发送给编程网格服务器。",
+                        "description": "登录到北大个人门户的密码。扩展只会将此密码发送给 IAAA 身份验证服务器。",
                         "default": ""
                     },
                     "programming-grid.info.courseId": {

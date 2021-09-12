@@ -37,27 +37,50 @@ export async function login(): Promise<boolean> {
         return false;
     }
     const data = new URLSearchParams();
-    data.append('username', username);
-    data.append('password', password);
-    return fetch("https://programming.pku.edu.cn/programming/login.do", {
+    data.append("appid", "ProgrammingGrid");
+    data.append("userName", username);
+    data.append("password", password);
+    data.append("randCode", "");
+    data.append("smsCode", "");
+    data.append("otpCode", "");
+    data.append("redirUrl", "https://programming.pku.edu.cn/authcallback");
+    return fetch("https://iaaa.pku.edu.cn/iaaa/oauthlogin.do", {
         method: "POST",
         headers: {
             ...headers,
-            'Content-Type': 'application/x-www-form-urlencoded',
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         },
         redirect: 'manual',
-        body: data.toString() + "&login=%B5%C7%C2%BC" // 登录 in GB2312
-    }).then(r => {
-        const cookie = r.headers.get('Set-Cookie');
-        if (cookie === null) {
-            vscode.window.showErrorMessage("登录失败，请检查用户名和密码是否正确。");
+        body: data
+    })
+        .then(r => r.json())
+        .then(json => {
+            console.log(json);
+            if (json.success !== true) {
+                vscode.window.showErrorMessage("登录失败，请检查用户名和密码是否正确。");
+                return false;
+            }
+            return fetch(`https://programming.pku.edu.cn/authcallback?_rand=${Math.random()}&token=${json.token}`, {
+                headers: {
+                    ...headers
+                },
+                redirect: 'manual'
+            }).then(r => {
+                const cookie = r.headers.get('Set-Cookie');
+                if (cookie === null) {
+                    vscode.window.showErrorMessage("登录失败。");
+                    return false;
+                }
+                vscode.window.showInformationMessage("登录成功。");
+                saveCookie(cookie);
+                return true;
+            });
+        })
+        .catch(err => {
+            console.log(err);
+            vscode.window.showErrorMessage("登录失败。");
             return false;
-        } else {
-            vscode.window.showInformationMessage("登录成功。");
-            saveCookie(cookie);
-            return true;
-        }
-    });
+        });
 }
 
 export async function getCourseName() {

@@ -21,7 +21,7 @@ export function getCourseId() {
 
 export async function setUser() {
     const username = await window.showInputBox({
-        prompt: '输入编程网格用户名：',
+        prompt: '输入北大学号：',
         placeHolder: '21000xxxxx',
         ignoreFocusOut: true,
         validateInput: (value) => {
@@ -31,7 +31,7 @@ export async function setUser() {
     });
     if (username === undefined) return;
     const password = await window.showInputBox({
-        prompt: '输入密码：',
+        prompt: '输入个人门户密码：',
         password: true,
         ignoreFocusOut: true,
         validateInput: (value) => {
