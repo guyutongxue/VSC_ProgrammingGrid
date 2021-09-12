@@ -216,8 +216,7 @@ export async function getProblems(setId: string) {
             const result = /\/programming\/problem\/([0-9a-f]{32})\/show\.do/.exec(href);
             if (result === null) return null;
             const pId = result[1];
-            const font = $(this).find("font");
-            const status = font.length === 0 ? undefined : font.attr('color') === 'red' ? 'wa' : 'ac';
+            const status = a.hasClass('presult0') ? 'ac' : (a.hasClass('presult1') ? 'wa' : undefined);
             return <IProblemInfo>{
                 id: pId,
                 setId: setId,

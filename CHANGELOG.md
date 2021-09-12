@@ -1,5 +1,13 @@
 # 更新日志
 
+## 0.1.4
+*2021.9.12*
+- Improve problem list status API
+
+## 0.1.3
+*2021.9.12*
+- Change Login to IAAA
+
 ## 0.1.2
 *2021.9.10*
 - Faster: use new-added API
