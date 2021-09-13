@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.1.5
+*2021.9.13*
+- Fix bug: Add support for new 128-bit-passport
+
 ## 0.1.4
 *2021.9.12*
 - Improve problem list status API

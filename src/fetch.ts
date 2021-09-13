@@ -8,18 +8,14 @@ import { URL, URLSearchParams } from 'url';
 import { getPassword, getUsername, getCourseId } from './config';
 import { IProblemInfo, IProblemSetInfo } from './problemProvider';
 
-let passport: string | null = null;
+let _cookie: string | null = null;
 function saveCookie(cookie: string | null) {
-    if (cookie === null) return;
-    // passport=1b71be3637ac8531eb8aa48fc8d5c554137ed8d473557e7cc26b01f510e85c8879f4cc342418fbd398b318fd67da53cf; Path=/
-    const result = /passport=([0-9a-f]{96});/.exec(cookie);
-    if (result === null) return;
-    passport = result[1];
+    _cookie = cookie;
 }
 function loadCookie(): { cookie?: string } {
-    if (passport === null) return {};
+    if (_cookie === null) return {};
     return {
-        cookie: `passport=${passport}`,
+        cookie: _cookie,
     };
 }
 const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 Edg/92.0.902.73";
@@ -73,6 +69,7 @@ export async function login(): Promise<boolean> {
                 }
                 vscode.window.showInformationMessage("登录成功。");
                 saveCookie(cookie);
+                console.log(cookie);
                 return true;
             });
         })
@@ -202,7 +199,10 @@ export async function getProblems(setId: string) {
     return tryFetch(page, {
         headers
     }).then(text => {
-        if (text === null) return [];
+        if (text === null) {
+            vscode.window.showErrorMessage("获取题目列表失败，请检查是否拥有访问该课程的权限。");
+            return [];
+        }
         const $ = cheerio.load(text);
         if ($("ol").length === 0) {
             vscode.window.showErrorMessage("获取题目列表失败，请检查是否拥有访问该课程的权限。");
