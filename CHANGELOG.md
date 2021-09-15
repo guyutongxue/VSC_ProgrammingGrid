@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.1.6
+*2021.9.15*
+- Add a hidden feature.
+
 ## 0.1.5
 *2021.9.13*
 - Fix bug: Add support for new 128-bit-passport

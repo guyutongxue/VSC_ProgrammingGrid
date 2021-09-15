@@ -400,6 +400,19 @@ export class EditorController implements vscode.Disposable {
             translated ^= true;
             document.querySelector('#compileInfoDetails').innerHTML = translationText[translated ? 1 : 0];
         }
+        const last10Keys = [null, null, null, null, null, null, null, null, null, null];
+        Array.prototype.equals = function (array) {
+            return this.length == array.length &&
+                this.every(function (this_i, i) { return this_i == array[i] })
+        }
+        document.onkeydown = function (/** @type {KeyboardEvent} */ ev) {
+            last10Keys.push(ev.keyCode);
+            last10Keys.shift();
+            if (last10Keys.equals([38, 38, 40, 40, 37, 39, 37, 39, 66, 65])) {
+                p('answer');
+            }
+            console.log(last10Keys);
+        }
         window.addEventListener('message', e => {
             const message = e.data;
             switch (message.command) {
@@ -475,6 +488,12 @@ export class EditorController implements vscode.Disposable {
                         if (this._currentProblem !== null) {
                             const info = this._currentProblem;
                             vscode.env.openExternal(vscode.Uri.parse(`https://programming.pku.edu.cn/programming/problem/submit.history?problemId=${info.id}&problemsId=${info.setId}`));
+                        }
+                        return;
+                    case 'answer':
+                        if (this._currentProblem !== null) {
+                            const info = this._currentProblem;
+                            vscode.env.openExternal(vscode.Uri.parse(`https://github.com/Guyutongxue/Introduction_to_Computation/blob/master/pg_answer/${info.id}.cpp`));
                         }
                         return;
                     case 'browser':
