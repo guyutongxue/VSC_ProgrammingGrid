@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.1.8
+*2021.9.16*
+- Focus on Mac terminal.
+
 ## 0.1.7
 *2021.9.16*
 - Fix *nix permission and linefeed problems.
