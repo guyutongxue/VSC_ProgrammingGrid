@@ -17,6 +17,7 @@ cwd=${cwd//\"/\\\"}
 
 osascript > /dev/null <<EOF
 tell application "Terminal"
+    activate
     do script "cd ${cwd}; clear; ./pause-console.rb ${escaped_args[@]}; exit"
 end tell
 EOF
