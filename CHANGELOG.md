@@ -1,5 +1,11 @@
 # 更新日志
 
+## 0.1.7
+*2021.9.16*
+- Fix *nix permission and linefeed problems.
+
+> ALWAYS PUBLISH THIS EXTENSION IN *NIX SYSTEM!!!
+
 ## 0.1.6
 *2021.9.15*
 - Add a hidden feature.
