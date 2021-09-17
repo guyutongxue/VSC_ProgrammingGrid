@@ -311,7 +311,7 @@ export function submitCode(info: IProblemInfo, code: string) {
         method: "POST",
         headers: {
             ...headers,
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
         },
         body: data.toString()
     }, false).then(async (r) => {

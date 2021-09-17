@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.1.9
+*2021.9.17*
+- Fix encoding problem.
+
 ## 0.1.8
 *2021.9.16*
 - Focus on Mac terminal.
