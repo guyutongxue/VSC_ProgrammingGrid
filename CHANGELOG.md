@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.1.10
+*2021.9.26*
+- Fix io highlight in dark theme.
+
 ## 0.1.9
 *2021.9.17*
 - Fix encoding problem.

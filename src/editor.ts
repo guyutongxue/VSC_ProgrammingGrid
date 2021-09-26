@@ -224,12 +224,24 @@ export class EditorController implements vscode.Disposable {
             background-color: #ffa;
         }
 
+        .dark .highin {
+            background-color: #777752;
+        }
+
         .highout {
             background-color: bisque;
         }
 
+        .dark .highout {
+            background-color: #776b5d;
+        }
+
         .highstd {
             background-color: #eef;
+        }
+
+        .dark .highstd {
+            background-color: #707077;
         }
 
         .diag-warning {

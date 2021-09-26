@@ -171,13 +171,15 @@ async function tryFetch(url: string, options: RequestInit, decode = true): Promi
 
 /** Translate image url to base64 */
 async function getImage(url: string): Promise<string> {
+    let mimeType;
     const buf = await fetch(url, {
         headers: {
             ...headers,
             ...loadCookie(),
         }
     }).then(async r => {
-        if (r.headers.get("Content-Type")?.startsWith("text/html")) {
+        mimeType = r.headers.get('Content-Type') ?? mime.getType(url);
+        if (mimeType?.startsWith("text/html")) {
             if (!(await login())) return Buffer.from("");
             return fetch(url, {
                 headers: {
@@ -189,7 +191,6 @@ async function getImage(url: string): Promise<string> {
             return r.buffer();
         }
     });
-    const mimeType = mime.getType(url);
     return `data:${mimeType};base64,${buf.toString('base64')}`;
 }
 
