@@ -286,14 +286,25 @@ export async function getDescription(info: IProblemInfo) {
         // }
         // r.input = $('.highin').text();
         // r.output = $('.highout').text();
+        // Some problems has <br> but no \n in <pre>
+        let input = $('#sampleInput').text();
+        const inputHtml = $('#sampleInput').html();
+        if (!input.includes('\n') && inputHtml?.includes('<br>')) {
+            input = inputHtml.replace(/<br>/g, '\n');
+        }
+        let output = $('#sampleOutput').text();
+        const outputHtml = $('#sampleOutput').html();
+        if (!output.includes('\n') && outputHtml?.includes('<br>')) {
+            output = outputHtml.replace(/<br>/g, '\n');
+        }
         const r: ProblemDescription = {
             title: $("#problemTitle").text(),
             description: $("#problemDescription").html() ?? "",
             aboutInput: $("#aboutInput").html() ?? "",
             aboutOutput: $("#aboutOutput").html() ?? "",
             hint: $("#problemHint").html() ?? "",
-            input: $("#sampleInput").text(),
-            output: $("#sampleOutput").text()
+            input: input,
+            output: output
         };
         console.log(r);
         return r;

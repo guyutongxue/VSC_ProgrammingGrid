@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.1.11
+*2021.10.8*
+- Fix newline in some problem's description.
+
 ## 0.1.10
 *2021.9.26*
 - Fix io highlight in dark theme.
