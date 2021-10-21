@@ -159,12 +159,21 @@ async function tryFetch(url: string, options: RequestInit, decode = true): Promi
             continue;
         }
         const buf = await r.clone().buffer();
-        const text = iconv.decode(buf, 'gb2312');
-        const $ = cheerio.load(text);
-        if ($('[name="accessDeny"]').length > 0) {
-            continue;
+        if (r.headers.get('Content-Type')?.includes('application/json')) {
+            const text = iconv.decode(buf, 'utf-8');
+            const json = JSON.parse(text);
+            if (json?.type === 'relogin') {
+                continue;
+            }
+            return decode ? text : r;
+        } else {
+            const text = iconv.decode(buf, 'gb2312');
+            const $ = cheerio.load(text);
+            if ($('[name="accessDeny"]').length > 0) {
+                continue;
+            }
+            return decode ? text : r;
         }
-        return decode ? text : r;
     }
     return null;
 }
@@ -196,7 +205,7 @@ async function getImage(url: string): Promise<string> {
 
 export async function getProblems(setId: string) {
     const courseId = getCourseId();
-    const page = `https://programming.pku.edu.cn/programming/course/${courseId}/showProblemList.do?problemsId=${setId}`;
+    const page = `https://programming.pku.edu.cn/programming/course/${courseId}/showProblemList.do?problemsId=${setId}&type=json`;
     return tryFetch(page, {
         headers
     }).then(text => {
@@ -204,28 +213,42 @@ export async function getProblems(setId: string) {
             vscode.window.showErrorMessage("获取题目列表失败，请检查是否拥有访问该课程的权限。");
             return [];
         }
-        const $ = cheerio.load(text);
-        if ($("ol").length === 0) {
+        const json = JSON.parse(text);
+        // const $ = cheerio.load(text);
+        // if ($("ol").length === 0) {
+        //     vscode.window.showErrorMessage("获取题目列表失败，请检查是否拥有访问该课程的权限。");
+        //     return [];
+        // }
+        // return $("ol").children().map(function (i) {
+        //     const a = $(this).children("a").eq(0);
+        //     const href = a.attr("href");
+        //     const text = a.text();
+        //     if (typeof href === "undefined") return null;
+        //     const result = /\/programming\/problem\/([0-9a-f]{32})\/show\.do/.exec(href);
+        //     if (result === null) return null;
+        //     const pId = result[1];
+        //     const status = a.hasClass('presult0') ? 'ac' : (a.hasClass('presult1') ? 'wa' : undefined);
+        //     return <IProblemInfo>{
+        //         id: pId,
+        //         setId: setId,
+        //         text: text,
+        //         index: i + 1,
+        //         status: status
+        //     };
+        // }).toArray();
+        console.log(json);
+        if (!("problemlist" in json)) {
             vscode.window.showErrorMessage("获取题目列表失败，请检查是否拥有访问该课程的权限。");
             return [];
         }
-        return $("ol").children().map(function (i) {
-            const a = $(this).children("a").eq(0);
-            const href = a.attr("href");
-            const text = a.text();
-            if (typeof href === "undefined") return null;
-            const result = /\/programming\/problem\/([0-9a-f]{32})\/show\.do/.exec(href);
-            if (result === null) return null;
-            const pId = result[1];
-            const status = a.hasClass('presult0') ? 'ac' : (a.hasClass('presult1') ? 'wa' : undefined);
-            return <IProblemInfo>{
-                id: pId,
-                setId: setId,
-                text: text,
-                index: i + 1,
-                status: status
-            };
-        }).toArray();
+        return (json.problemlist.problems as any[]).map((p, i) => (<IProblemInfo>{
+            id: p.id,
+            setId: setId,
+            index: i + 1,
+            text: p.title,
+            status: p.result === null ? undefined : (p.result === "AC" ? 'ac' : 'wa')
+        }));
+        
     });
 }
 

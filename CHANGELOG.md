@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.1.12
+*2021.10.21*
+- Change "Problem list" API to JSON version.
+
 ## 0.1.11
 *2021.10.8*
 - Fix newline in some problem's description.
