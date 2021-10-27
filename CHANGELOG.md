@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.1.13
+*2021.10.27*
+- Fix strange spacing in some problem's description.
+
 ## 0.1.12
 *2021.10.21*
 - Change "Problem list" API to JSON version.

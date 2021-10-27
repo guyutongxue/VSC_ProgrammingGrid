@@ -320,6 +320,8 @@ export async function getDescription(info: IProblemInfo) {
         if (!output.includes('\n') && outputHtml?.includes('<br>')) {
             output = outputHtml.replace(/<br>/g, '\n');
         }
+        input = input.replace(/\u2003|\u200b|\u00a0|&nbsp;/g, ' ');
+        output = output.replace(/\u2003|\u200b|\u00a0|&nbsp;/g, ' ');
         const r: ProblemDescription = {
             title: $("#problemTitle").text(),
             description: $("#problemDescription").html() ?? "",
