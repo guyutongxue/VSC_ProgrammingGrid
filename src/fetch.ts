@@ -248,7 +248,7 @@ export async function getProblems(setId: string) {
             text: p.title,
             status: p.result === null ? undefined : (p.result === "AC" ? 'ac' : 'wa')
         }));
-        
+
     });
 }
 
@@ -274,54 +274,29 @@ export async function getDescription(info: IProblemInfo) {
     }).then(async text => {
         if (text === null) return null;
         const $ = cheerio.load(text);
-        // $('.highin,.highout').children('br').remove();
-        // const mainContent = $(".fieldname,.fieldvalue");
-        // const length = mainContent.length;
-        // if (length < 4) return null;
-        // const descRaw = mainContent.slice(1, length - 3);
-        // for (const i of descRaw) {
-        //     if ($(i).hasClass('fieldname')) {
-        //         r.sections.push({
-        //             title: $(i).text(),
-        //             content: ""
-        //         });
-        //     }
-        //     if ($(i).hasClass('fieldvalue')) {
-        //         // Replace img source
-        //         // $.each doesn't support async, so gather all promises here
         const promises: Promise<void>[] = [];
-        $("#problemDescription,#aboutinput,#aboutOutput,#problemHint").find("img").each(function (_) {
+        // Some very strange problems have image in sample input.
+        // Move them to the description section.
+        $("#sampleInput img").appendTo("#aboutInput");
+        $("#sampleOutput img").appendTo("#aboutOutput");
+        $("#problemDescription,#aboutInput,#aboutOutput,#problemHint").find("img").each(function (_) {
             const src = $(this).attr("src");
             if (typeof src === "undefined") return;
             promises.push(getImage((new URL(src, page)).href).then(base64 => {
                 $(this).attr("src", base64);
             }));
         });
-        //         // Remove extra empty pre
-        //         $(i).find("pre").filter(function (_) {
-        //             return $(this).text() === "";
-        //         }).each(function (_) {
-        //             $(this).remove();
-        //         });
         await Promise.all(promises);
-        //         r.sections[r.sections.length - 1].content = $(i).html() ?? "";
-        //     }
-        // }
-        // r.input = $('.highin').text();
-        // r.output = $('.highout').text();
-        // Some problems has <br> but no \n in <pre>
-        let input = $('#sampleInput').text();
-        const inputHtml = $('#sampleInput').html();
-        if (!input.includes('\n') && inputHtml?.includes('<br>')) {
-            input = inputHtml.replace(/<br>/g, '\n');
+        function getRawIo(selector: string) {
+            let text = $(selector).text().trim();
+            const html = $(selector).html();
+            if (!text.includes('\n') && html?.includes('<br>')) {
+                text = html.replace(/<br>/g, '\n');
+            }
+            return text.replace(/\u2003|\u200b|\u00a0|&nbsp;/g, ' ');
         }
-        let output = $('#sampleOutput').text();
-        const outputHtml = $('#sampleOutput').html();
-        if (!output.includes('\n') && outputHtml?.includes('<br>')) {
-            output = outputHtml.replace(/<br>/g, '\n');
-        }
-        input = input.replace(/\u2003|\u200b|\u00a0|&nbsp;/g, ' ');
-        output = output.replace(/\u2003|\u200b|\u00a0|&nbsp;/g, ' ');
+        const input = getRawIo('#sampleInput');
+        const output = getRawIo('#sampleOutput');
         const r: ProblemDescription = {
             title: $("#problemTitle").text(),
             description: $("#problemDescription").html() ?? "",
