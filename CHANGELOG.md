@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.1.15
+*2021.12.3*
+- Change "Submit" API to JSON version.
+
 ## 0.1.14
 *2021.11.25*
 - Fix strange spacing in some problem's description.

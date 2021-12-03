@@ -319,6 +319,7 @@ export function submitCode(info: IProblemInfo, code: string) {
     data.append('problemsId', info.setId);
     data.append('sourceCode', HEADER_COMMENT + code);
     data.append('programLanguage', 'C++');
+    data.append('type', 'json');
     return tryFetch(page, {
         method: "POST",
         headers: {
@@ -326,41 +327,23 @@ export function submitCode(info: IProblemInfo, code: string) {
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
         },
         body: data.toString()
-    }, false).then(async (r) => {
-        if (r === null) {
-            vscode.window.showErrorMessage("提交失败，请检查是否拥有访问该课程的权限。");
+    }).then(async (r) => {
+        if (r === null) return null;
+        let json: any;
+        try {
+            json = JSON.parse(r);
+        } catch {
             return null;
         }
-        if (r.status !== 200) {
-            vscode.window.showErrorMessage("提交失败。可能是编程网格服务器出现问题，请稍后再试。");
-            return null;
-        }
-        const text = iconv.decode(await r?.buffer(), "gb2312");
-        const $ = cheerio.load(text);
-        // "system" in source code, redirect to home page
-        if (!r.url.includes("solutionId")) {
-            vscode.window.showErrorMessage("编程网格拒绝服务。可能的原因是输入了不允许的字符序列。");
-            return null;
-        }
-        // "No source code" hint
-        if ($("td.t").length > 0) {
-            const msg = $("td.t").text();
-            vscode.window.showErrorMessage(msg);
-            return null;
-        }
-        const status = $('.showtitle').text().trim();
-        const values = $('.fieldvalue');
-        if (values.length !== 3) return null;
-        const details = values.eq(1).children().html();
-
+        if (!json.solution) return null;
         vscode.commands.executeCommand("programming-grid.refresh", {
             type: "problemSet",
             value: info.setId
         });
 
         return {
-            status: status,
-            details: details ?? ""
+            status: json.solution.result,
+            details: json.solution.hint
         };
     });
 }
