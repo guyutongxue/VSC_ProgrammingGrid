@@ -2,7 +2,7 @@
     "name": "programming-grid",
     "displayName": "编程网格",
     "description": "北京大学校内 OJ 助手",
-    "version": "0.1.15",
+    "version": "0.2.0",
     "preview": true,
     "categories": [
         "Other"

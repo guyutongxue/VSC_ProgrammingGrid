@@ -8,14 +8,19 @@ import { URL, URLSearchParams } from 'url';
 import { getPassword, getUsername, getCourseId } from './config';
 import { IProblemInfo, IProblemSetInfo } from './problemProvider';
 
-let _cookie: string | null = null;
-function saveCookie(cookie: string | null) {
-    _cookie = cookie;
+let _cookie: Record<string, string> = {
+    "PG_client": "vscode_ext; Max-Age=315360000; Expires=Fri, 05-Dec-2031 05:34:07 GMT; Path=/; Secure"
+};
+function saveCookie(cookie: string[]) {
+    for (const c of cookie) {
+        const [key, ...value] = c.split('=');
+        _cookie[key] = value.join('');
+    }
 }
 function loadCookie(): { cookie?: string } {
-    if (_cookie === null) return {};
+    const cookie = Object.entries(_cookie).map(([k, v]) => `${k}=${v}`).join('; ');
     return {
-        cookie: _cookie,
+        cookie
     };
 }
 const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 Edg/92.0.902.73";
@@ -58,7 +63,8 @@ export async function login(): Promise<boolean> {
             }
             return fetch(`https://programming.pku.edu.cn/authcallback?_rand=${Math.random()}&token=${json.token}`, {
                 headers: {
-                    ...headers
+                    ...headers,
+                    ...loadCookie()
                 },
                 redirect: 'manual'
             }).then(r => {
@@ -68,7 +74,7 @@ export async function login(): Promise<boolean> {
                     return false;
                 }
                 vscode.window.showInformationMessage("登录成功。");
-                saveCookie(cookie);
+                saveCookie(cookie.split(', '));
                 console.log(cookie);
                 return true;
             });
@@ -83,57 +89,48 @@ export async function login(): Promise<boolean> {
 export async function getCourseName() {
     const id = getCourseId();
     if (id === null) return null;
-    const page = `https://programming.pku.edu.cn/programming/course/${id}/show.do`;
-    return fetch(page, {
+    const page = `https://programming.pku.edu.cn/course/${id}/?type=json`;
+    return tryFetch(page, {
         headers
     })
-        .then(r => r.buffer())
-        .then(buf => {
-            const text = iconv.decode(buf, 'gb2312');
-            const $ = cheerio.load(text);
-            const title = $(".showtitle");
-            title.children().remove();
-            return title.text().trim();
+        .then(r => {
+            if (r === null) return null;
+            const json = JSON.parse(r);
+            return json.course.title;
         });
 }
 
 export async function getProblemSets() {
     const id = getCourseId();
     if (id === null) return [];
-    const page = `https://programming.pku.edu.cn/programming/course/${id}/show.do`;
-    return fetch(page, {
+    const page = `https://programming.pku.edu.cn/course/${id}/?type=json`;
+    return tryFetch(page, {
         headers
     })
-        .then(r => r.buffer())
-        .then(buf => {
-            const text = iconv.decode(buf, 'gb2312');
-            const $ = cheerio.load(text);
-            const list = $("ul.homework");
-            return list.children().map(function (i) {
-                const a = $(this).children("a");
-                const color = $(this).children("font").attr("color");
-                const href = a.attr("href");
-                const text = a.text();
-                if (typeof href === "undefined") return null;
-                const result = /problemsId=([0-9a-f]{32})/.exec(href);
-                if (result === null) return null;
-                const pId = result[1];
+        .then(r => {
+            if (r === null) return [];
+            const json = JSON.parse(r);
+            const sets: any[] = json.course.problemlists;
+           
+            return sets.map(set => {
+                const openDate = new Date(set.assignment.openTime);
+                const closeDate = new Date(set.assignment.closeTime);
+                const now = new Date();
+                const isAvailable = now >= openDate && now <= closeDate;
                 return <IProblemSetInfo>{
-                    id: pId,
-                    text: text,
-                    available: color !== "green"
+                    id: set.id,
+                    text: set.title,
+                    available: isAvailable
                 };
-            }).toArray();
+            }); 
         });
 }
 
-async function tryFetch(url: string, options: RequestInit): Promise<string | null>;
-async function tryFetch(url: string, options: RequestInit, decode: true): Promise<string | null>;
-async function tryFetch(url: string, options: RequestInit, decode: false): Promise<Response | null>;
-async function tryFetch(url: string, options: RequestInit, decode = true): Promise<Response | string | null> {
+async function tryFetch(url: string, options: RequestInit): Promise<string | null> {
     function getOptions(): RequestInit {
         return {
             ...options,
+            redirect: 'manual',
             headers: {
                 ...options.headers,
                 ...loadCookie(),
@@ -162,17 +159,11 @@ async function tryFetch(url: string, options: RequestInit, decode = true): Promi
         if (r.headers.get('Content-Type')?.includes('application/json')) {
             const text = iconv.decode(buf, 'utf-8');
             const json = JSON.parse(text);
-            if (json?.type === 'relogin') {
+            console.log(json);
+            if (json.status !== 'OK') {
                 continue;
             }
-            return decode ? text : r;
-        } else {
-            const text = iconv.decode(buf, 'gb2312');
-            const $ = cheerio.load(text);
-            if ($('[name="accessDeny"]').length > 0) {
-                continue;
-            }
-            return decode ? text : r;
+            return text;
         }
     }
     return null;
@@ -205,7 +196,7 @@ async function getImage(url: string): Promise<string> {
 
 export async function getProblems(setId: string) {
     const courseId = getCourseId();
-    const page = `https://programming.pku.edu.cn/programming/course/${courseId}/showProblemList.do?problemsId=${setId}&type=json`;
+    const page = `https://programming.pku.edu.cn/probset/${setId}/?type=json`;
     return tryFetch(page, {
         headers
     }).then(text => {
@@ -214,29 +205,6 @@ export async function getProblems(setId: string) {
             return [];
         }
         const json = JSON.parse(text);
-        // const $ = cheerio.load(text);
-        // if ($("ol").length === 0) {
-        //     vscode.window.showErrorMessage("获取题目列表失败，请检查是否拥有访问该课程的权限。");
-        //     return [];
-        // }
-        // return $("ol").children().map(function (i) {
-        //     const a = $(this).children("a").eq(0);
-        //     const href = a.attr("href");
-        //     const text = a.text();
-        //     if (typeof href === "undefined") return null;
-        //     const result = /\/programming\/problem\/([0-9a-f]{32})\/show\.do/.exec(href);
-        //     if (result === null) return null;
-        //     const pId = result[1];
-        //     const status = a.hasClass('presult0') ? 'ac' : (a.hasClass('presult1') ? 'wa' : undefined);
-        //     return <IProblemInfo>{
-        //         id: pId,
-        //         setId: setId,
-        //         text: text,
-        //         index: i + 1,
-        //         status: status
-        //     };
-        // }).toArray();
-        console.log(json);
         if (!("problemlist" in json)) {
             vscode.window.showErrorMessage("获取题目列表失败，请检查是否拥有访问该课程的权限。");
             return [];
@@ -246,7 +214,7 @@ export async function getProblems(setId: string) {
             setId: setId,
             index: i + 1,
             text: p.title,
-            status: p.result === null ? undefined : (p.result === "AC" ? 'ac' : 'wa')
+            // status: p.result === null ? undefined : (p.result === "AC" ? 'ac' : 'wa')
         }));
 
     });
@@ -268,45 +236,40 @@ export interface SolutionDescription {
 }
 
 export async function getDescription(info: IProblemInfo) {
-    const page = `https://programming.pku.edu.cn/programming/problem/${info.id}/show.do?problemsId=${info.setId}`;
+    const page = `https://programming.pku.edu.cn/probset/${info.setId}/${info.id}/?type=json`;
     return tryFetch(page, {
         headers
     }).then(async text => {
         if (text === null) return null;
-        const $ = cheerio.load(text);
-        const promises: Promise<void>[] = [];
-        // Some very strange problems have image in sample input.
-        // Move them to the description section.
-        $("#sampleInput img").appendTo("#aboutInput");
-        $("#sampleOutput img").appendTo("#aboutOutput");
-        $("#problemDescription,#aboutInput,#aboutOutput,#problemHint").find("img").each(function (_) {
-            const src = $(this).attr("src");
-            if (typeof src === "undefined") return;
-            promises.push(getImage((new URL(src, page)).href).then(base64 => {
-                $(this).attr("src", base64);
-            }));
-        });
-        await Promise.all(promises);
-        function getRawIo(selector: string) {
-            let text = $(selector).text().trim();
-            const html = $(selector).html();
-            if (!text.includes('\n') && html?.includes('<br>')) {
-                text = html.replace(/<br>/g, '\n');
-            }
-            return text.replace(/\u2003|\u200b|\u00a0|&nbsp;/g, ' ');
+        const json = JSON.parse(text);
+        for (const i in json.problem) {
+            const html = json.problem[i];
+            const $ = cheerio.load(html);
+            const promises: Promise<void>[] = [];
+            $("img").each(function (_) {
+                const src = $(this).attr("src");
+                if (typeof src === "undefined") return;
+                promises.push(getImage((new URL(src, page)).href).then(base64 => {
+                    $(this).attr("src", base64);
+                }));
+            });
+            await Promise.all(promises);
+            json.problem[i] = $.html();
         }
-        const input = getRawIo('#sampleInput');
-        const output = getRawIo('#sampleOutput');
+        function getRawIo(text: string) {
+            return text.replace(/\r/,'').replace(/\u2003|\u200b|\u00a0|&nbsp;/g, ' ');
+        }
+        const input = getRawIo(json.problem.sampleInput);
+        const output = getRawIo(json.problem.sampleOutput);
         const r: ProblemDescription = {
-            title: $("#problemTitle").text(),
-            description: $("#problemDescription").html() ?? "",
-            aboutInput: $("#aboutInput").html() ?? "",
-            aboutOutput: $("#aboutOutput").html() ?? "",
-            hint: $("#problemHint").html() ?? "",
+            title: json.problem.title,
+            description: json.problem.description,
+            aboutInput: json.problem.aboutInput,
+            aboutOutput: json.problem.aboutOutput,
+            hint: json.problem.hint,
             input: input,
             output: output
         };
-        console.log(r);
         return r;
     });
 }

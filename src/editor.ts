@@ -615,7 +615,7 @@ export class EditorController implements vscode.Disposable {
         // const result = await submitCode(this._currentProblem, code);
         if (result === null) return;
         // Get average performance
-        const perfReg = /^Case \d+: Time = (\d+)ms, Memory = (\d+)kB\.$/gm;
+        const perfReg = /^Case\s+\d+ :  Time:\s+(\d+) ms,  Memory:\s+(\d+) kB,/gm;
         const time: number[] = [], memory: number[] = [];
         let match: RegExpExecArray | null;
         let perfRes: string;

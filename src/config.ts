@@ -49,10 +49,10 @@ export async function setUser() {
 }
 
 export async function setCourseId() {
-    const validator = /^https:\/\/programming.pku.edu.cn\/programming\/course\/([0-9a-f]{32})\/show.do$/;
+    const validator = /^https:\/\/programming.pku.edu.cn(\/programming)?\/course\/([0-9a-f]{32})(\/(show.do)?)?$/;
     const result = await window.showInputBox({
         title: '输入课程页面的 URL 地址：',
-        placeHolder: '如 https://programming.pku.edu.cn/programming/course/6c45504288b542eca6d96bfe4dc22b4a/show.do',
+        placeHolder: '如 https://programming.pku.edu.cn/course/8e6b7866023a4489babca3f56973f317/',
         ignoreFocusOut: true,
         validateInput: input => {
             if (input === "" || validator.test(input)) {
@@ -63,7 +63,7 @@ export async function setCourseId() {
         }
     });
     if (typeof result === "undefined") return;
-    const id = validator.exec(result)![1];
+    const id = validator.exec(result)![2];
     console.log(id);
     await workspace.getConfiguration('programming-grid').update('info.courseId', id, true);
     commands.executeCommand('programming-grid.refresh');
