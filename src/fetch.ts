@@ -199,7 +199,7 @@ export async function getProblems(setId: string) {
     const page = `https://programming.pku.edu.cn/probset/${setId}/?type=json`;
     return tryFetch(page, {
         headers
-    }).then(text => {
+    }).then(async (text) => {
         if (text === null) {
             vscode.window.showErrorMessage("获取题目列表失败，请检查是否拥有访问该课程的权限。");
             return [];
@@ -209,12 +209,32 @@ export async function getProblems(setId: string) {
             vscode.window.showErrorMessage("获取题目列表失败，请检查是否拥有访问该课程的权限。");
             return [];
         }
+
+        const data = new URLSearchParams();
+        data.append('query', 'results');
+        data.append('username', getUsername() ?? '');
+        data.append('probsetId', setId);
+        const results = await tryFetch(`https://programming.pku.edu.cn/account/query.do`, {
+            method: "POST",
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: data.toString(),
+        });
+        const status: Record<string, string> = {};
+        if (results !== null) {
+            const json = JSON.parse(results);
+            if (json.status === 'OK') {
+                for (const r of json.results) {
+                    status[r.id] = (r.result as string).toLowerCase();
+                }
+            }
+        }
+
         return (json.problemlist.problems as any[]).map((p, i) => (<IProblemInfo>{
             id: p.id,
             setId: setId,
             index: i + 1,
             text: p.title,
-            // status: p.result === null ? undefined : (p.result === "AC" ? 'ac' : 'wa')
+            status: p.id in status ? status[p.id] : undefined,
         }));
 
     });

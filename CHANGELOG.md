@@ -1,9 +1,13 @@
 # 更新日志
 
+## 0.2.1
+*2021.12.8*
+- Fix [#3](https://github.com/Guyutongxue/VSC_ProgrammingGrid/issues/3).
+
 ## 0.2.0
 *2021.12.7*
 - Update to new version of Programming Grid. Fixed [#1](https://github.com/Guyutongxue/VSC_ProgrammingGrid/issues/1) and [#2](https://github.com/Guyutongxue/VSC_ProgrammingGrid/issues/2).
-- **KNOWN ISSUE** Cannot retrieve the status of a problem. PG doesn't provide a way to fetch it yet.
+- **KNOWN ISSUE**\([#3](https://github.com/Guyutongxue/VSC_ProgrammingGrid/issues/3)\) Cannot retrieve the status of a problem. PG doesn't provide a way to fetch it yet.
 
 ## 0.1.15
 *2021.12.3*
