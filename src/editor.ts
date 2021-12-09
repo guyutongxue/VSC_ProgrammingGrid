@@ -547,8 +547,9 @@ export class EditorController implements vscode.Disposable {
             this._initWebPanel();
         }
         this._webPanel!.webview.html = this._getProblemHtml();
+        this.openEditor();
         // sleep 0.1s to let webview panel fully loaded
-        await new Promise<void>((r) => setTimeout(() => (this.openEditor(), r()), 100));
+        // await new Promise<void>((r) => setTimeout(() => (this.openEditor(), r()), 100));
     }
 
 
@@ -559,7 +560,7 @@ export class EditorController implements vscode.Disposable {
     }
 
     async openEditor() {
-        // await this._closeExisted();
+        await this._closeExisted();
         this._initEditorContent();
         this._webPanel?.reveal();
         if (this._textDoc === null) {

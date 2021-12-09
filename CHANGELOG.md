@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.2.3
+*2021.12.9*
+- Try fix: Editor sometimes not showing in vscode v1.63.
+
 ## 0.2.2
 *2021.12.9*
 - Fix 'run with sample input' issue: No extra HTML tags.
