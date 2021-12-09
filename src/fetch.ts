@@ -274,7 +274,7 @@ export async function getDescription(info: IProblemInfo) {
                 }));
             });
             await Promise.all(promises);
-            json.problem[i] = $.html();
+            json.problem[i] = $('body').html();
         }
         function getRawIo(text: string) {
             return text.replace(/\r/,'').replace(/\u2003|\u200b|\u00a0|&nbsp;/g, ' ');
@@ -290,6 +290,7 @@ export async function getDescription(info: IProblemInfo) {
             input: input,
             output: output
         };
+        console.log(r);
         return r;
     });
 }

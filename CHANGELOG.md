@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.2.2
+*2021.12.9*
+- Fix 'run with sample input' issue: No extra HTML tags.
+
 ## 0.2.1
 *2021.12.8*
 - Fix [#3](https://github.com/Guyutongxue/VSC_ProgrammingGrid/issues/3).
