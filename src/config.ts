@@ -92,9 +92,10 @@ const colorMap: {
         'WrongAnswer': '231, 76, 60',
         'RuntimeError': '157, 61, 207',
         'CompileError': '250, 219, 20',
-        // These two maybe not used
-        'TimeLimitExceeded': '5, 34, 66',
-        'MemoryLimitExceeded': '5, 34, 66',
+        'TimeOut': '5, 34, 66',
+        'OutOfMemory': '5, 34, 66',
+        'EmptyOutput': '0, 164, 151',
+        'OutputExceeded': '0, 164, 151',
 
         'Unknown': '204, 49, 124'
     },
@@ -103,8 +104,12 @@ const colorMap: {
         'WrongAnswer': '255, 0, 0',
         'RuntimeError': '255, 0, 255',
         'CompileError': '0, 128, 0',
+        'TimeOut': '255, 0, 255',
+        'OutOfMemory': '255, 0, 255',
+        'EmptyOutput': '255, 0, 0',
+        'OutputExceeded': '255, 0, 0',
 
-        'Unknown': '255, 0, 0'
+        'Unknown': '170, 34, 34'
     }
 };
 
@@ -121,10 +126,25 @@ const chineseMap: {
     'WrongAnswer': '错误答案',
     'RuntimeError': '运行错误',
     'CompileError': '编译错误',
-    'TimeLimitExceeded': '超时',
-    'MemoryLimitExceeded': '超内存',
+    'TimeOut': '时间超限',
+    'OutOfMemory': '内存超限',
+    'EmptyOutput': '空输出',
+    'OutputExceeded': '输出超限',
 
     'Unknown': '未知情形'
+};
+
+const englishMap: Record<string, string> = {
+    'Passed': 'Accepted',
+    'WrongAnswer': 'Wrong Answer',
+    'RuntimeError': 'Runtime Error',
+    'CompileError': 'Compile Error',
+    'TimeOut': 'Time Limit Exceeded',
+    'OutOfMemory': 'Memory Limit Exceeded',
+    'EmptyOutput': 'Empty Output',
+    'OutputExceeded': 'Output Limit Exceeded',
+
+    'Unknown': 'Unknown'
 };
 
 const abbrMap: {
@@ -134,15 +154,17 @@ const abbrMap: {
     'WrongAnswer': 'WA',
     'RuntimeError': 'RE',
     'CompileError': 'CE',
-    'TimeLimitExceeded': 'TLE',
-    'MemoryLimitExceeded': 'MLE',
+    'TimeOut': 'TLE',
+    'OutOfMemory': 'MLE',
+    'EmptyOutput': 'WA',
+    'OutputExceeded': 'OLE',
 
     'Unknown': 'UNK'
 };
 
 export function getStatusInfo(status: string) {
     const color = getStatusColor(status);
-    const title = status.replace(/(?!^)([A-Z])/g, ' $1');
+    const title = englishMap[status];
     const chinese = chineseMap[status] ?? chineseMap['Unknown'];
     const abbr = abbrMap[status] ?? abbrMap['Unknown'];
     return {

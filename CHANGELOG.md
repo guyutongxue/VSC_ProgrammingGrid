@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.2.4
+*2021.12.15*
+- Add new solution status: TLE, MLE, OLE, etc.
+
 ## 0.2.3
 *2021.12.9*
 - Try fix: Editor sometimes not showing in vscode v1.63.
