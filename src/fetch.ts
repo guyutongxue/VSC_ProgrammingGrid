@@ -297,10 +297,8 @@ export async function getDescription(info: IProblemInfo) {
 
 export function submitCode(info: IProblemInfo, code: string) {
     const HEADER_COMMENT = "// Submitted by 'Programming Grid' VS Code Extension\n\n";
-    const page = `https://programming.pku.edu.cn/programming/problem/submit.do`;
+    const page = `https://programming.pku.edu.cn/probset/${info.setId}/${info.id}/submit.do`;
     const data = new URLSearchParams();
-    data.append('problemId', info.id);
-    data.append('problemsId', info.setId);
     data.append('sourceCode', HEADER_COMMENT + code);
     data.append('programLanguage', 'C++');
     data.append('type', 'json');
@@ -320,14 +318,21 @@ export function submitCode(info: IProblemInfo, code: string) {
             return null;
         }
         if (!json.solution) return null;
-        vscode.commands.executeCommand("programming-grid.refresh", {
-            type: "problemSet",
-            value: info.setId
-        });
+        return json.solution.id as string;
+    });
+}
 
+export function getSolution(solutionId: string) {
+    const page = `https://programming.pku.edu.cn/solution/${solutionId}/status.do`;
+    return tryFetch(page, {
+        headers
+    }).then(async (r) => {
+        if (r === null) return null;
+        const json = JSON.parse(r);
+        if (!json.solution) return null;
         return {
             status: json.solution.result,
-            details: json.solution.hint
+            details: json.solution.result === 'Processing' ? '处理中，请稍候...' : json.solution.hint
         };
     });
 }

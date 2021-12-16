@@ -1,4 +1,4 @@
-import { getDescription, ProblemDescription, submitCode } from "./fetch";
+import { getDescription, getSolution, ProblemDescription, submitCode } from "./fetch";
 import { IProblemInfo } from "./problemProvider";
 import * as vscode from "vscode";
 import * as fs from "fs";
@@ -612,29 +612,38 @@ export class EditorController implements vscode.Disposable {
             vscode.window.showErrorMessage("编程网格拒绝带有 system、fork 等单词的代码。");
             return;
         }
-        const result = await submitCode(this._currentProblem, code);
-        // const result = await submitCode(this._currentProblem, code);
-        if (result === null) return;
-        // Get average performance
-        const perfReg = /^Case\s+\d+ :  Time:\s+(\d+) ms,  Memory:\s+(\d+) kB,/gm;
-        const time: number[] = [], memory: number[] = [];
-        let match: RegExpExecArray | null;
-        let perfRes: string;
-        while ((match = perfReg.exec(result.details)) !== null) {
-            time.push(parseInt(match[1]));
-            memory.push(parseInt(match[2]));
+        const sid = await submitCode(this._currentProblem, code);
+        if (sid === null) return;
+        while (true) {
+            const result = await getSolution(sid);
+            if (result === null) return;
+            // Get average performance
+            const perfReg = /^Case\s+\d+ :  Time:\s+(\d+) ms,  Memory:\s+(\d+) kB,/gm;
+            const time: number[] = [], memory: number[] = [];
+            let match: RegExpExecArray | null;
+            let perfRes: string;
+            while ((match = perfReg.exec(result.details)) !== null) {
+                time.push(parseInt(match[1]));
+                memory.push(parseInt(match[2]));
+            }
+            if (time.length !== 0) {
+                const aveTime = (time.reduce((a, b) => a + b) / time.length).toFixed();
+                const aveMemory = (memory.reduce((a, b) => a + b) / memory.length).toFixed();
+                perfRes = `${aveTime}ms/${aveMemory}kB`;
+            } else {
+                perfRes = "N/A";
+            }
+            this._postMessageToWebPanel('showSolution', {
+                ...getStatusInfo(result.status),
+                performance: perfRes,
+                details: result.details
+            });
+            if (result.status !== 'Processing') break;
+            await new Promise<void>((r) => setTimeout(() => (r()), 100));
         }
-        if (time.length !== 0) {
-            const aveTime = (time.reduce((a, b) => a + b) / time.length).toFixed();
-            const aveMemory = (memory.reduce((a, b) => a + b) / memory.length).toFixed();
-            perfRes = `${aveTime}ms/${aveMemory}kB`;
-        } else {
-            perfRes = "N/A";
-        }
-        this._postMessageToWebPanel('showSolution', {
-            ...getStatusInfo(result.status),
-            performance: perfRes,
-            details: result.details
+        vscode.commands.executeCommand("programming-grid.refresh", {
+            type: "problemSet",
+            value: this._currentProblem.setId
         });
     }
 

@@ -127,9 +127,15 @@ const chineseMap: {
     'RuntimeError': '运行错误',
     'CompileError': '编译错误',
     'TimeOut': '时间超限',
+    'WaitTimeOut': '时间超限',
     'OutOfMemory': '内存超限',
     'EmptyOutput': '空输出',
     'OutputExceeded': '输出超限',
+    'Testing': '测试中',
+    'Processing': '处理中',
+    'SystemError': '系统错误',
+    'NoProblem': '无题目',
+    'NoTestData': '无数据',
 
     'Unknown': '未知情形'
 };
@@ -140,9 +146,15 @@ const englishMap: Record<string, string> = {
     'RuntimeError': 'Runtime Error',
     'CompileError': 'Compile Error',
     'TimeOut': 'Time Limit Exceeded',
+    'WaitTimeOut': 'Time Limit Exceeded',
     'OutOfMemory': 'Memory Limit Exceeded',
     'EmptyOutput': 'Empty Output',
     'OutputExceeded': 'Output Limit Exceeded',
+    'Testing': 'Testing',
+    'Processing': 'Processing',
+    'SystemError': 'System Error',
+    'NoProblem': 'No Problem',
+    'NoTestData': 'No Test Data',
 
     'Unknown': 'Unknown'
 };
@@ -155,16 +167,22 @@ const abbrMap: {
     'RuntimeError': 'RE',
     'CompileError': 'CE',
     'TimeOut': 'TLE',
+    'WaitTimeOut': 'TLE',
     'OutOfMemory': 'MLE',
     'EmptyOutput': 'WA',
     'OutputExceeded': 'OLE',
+    'Testing': 'T',
+    'Processing': 'P',
+    'SystemError': 'SE',
+    'NoProblem': 'NP',
+    'NoTestData': 'ND',
 
     'Unknown': 'UNK'
 };
 
 export function getStatusInfo(status: string) {
     const color = getStatusColor(status);
-    const title = englishMap[status];
+    const title = englishMap[status] ?? englishMap['Unknown'];
     const chinese = chineseMap[status] ?? chineseMap['Unknown'];
     const abbr = abbrMap[status] ?? abbrMap['Unknown'];
     return {

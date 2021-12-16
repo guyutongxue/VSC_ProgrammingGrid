@@ -1,5 +1,10 @@
 # 更新日志
 
+## 0.2.5
+*2021.12.16*
+- Add new solution status: WaitTimeOut, SystemError, Processing, etc.
+- Change submit to "async" version API. 
+
 ## 0.2.4
 *2021.12.15*
 - Add new solution status: TLE, MLE, OLE, etc.
