@@ -322,6 +322,12 @@ export function submitCode(info: IProblemInfo, code: string) {
     });
 }
 
+let _ellipseCnt = 0;
+function ellipse() {
+    _ellipseCnt = (_ellipseCnt + 1) % 3;
+    return ".".repeat(_ellipseCnt + 1);
+}
+
 export function getSolution(solutionId: string) {
     const page = `https://programming.pku.edu.cn/solution/${solutionId}/status.do`;
     return tryFetch(page, {
@@ -332,7 +338,7 @@ export function getSolution(solutionId: string) {
         if (!json.solution) return null;
         return {
             status: json.solution.result,
-            details: json.solution.result === 'Processing' ? '处理中，请稍候...' : json.solution.hint
+            details: json.solution.result === 'Processing' ? '处理中，请稍候' + ellipse() : json.solution.hint
         };
     });
 }

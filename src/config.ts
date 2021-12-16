@@ -93,9 +93,15 @@ const colorMap: {
         'RuntimeError': '157, 61, 207',
         'CompileError': '250, 219, 20',
         'TimeOut': '5, 34, 66',
+        'WaitTimeOut': '5, 34, 66',
         'OutOfMemory': '5, 34, 66',
         'EmptyOutput': '0, 164, 151',
         'OutputExceeded': '0, 164, 151',
+        'Testing': '20, 85, 143',
+        'Processing': '20, 85, 143',
+        'SystemError': '204, 49, 124',
+        'NoProblem': '204, 49, 124',
+        'NoTestData': '204, 49, 124',
 
         'Unknown': '204, 49, 124'
     },
@@ -105,9 +111,15 @@ const colorMap: {
         'RuntimeError': '255, 0, 255',
         'CompileError': '0, 128, 0',
         'TimeOut': '255, 0, 255',
+        'WaitTimeOut': '255, 0, 255',
         'OutOfMemory': '255, 0, 255',
         'EmptyOutput': '255, 0, 0',
         'OutputExceeded': '255, 0, 0',
+        'Testing': '128, 128, 128',
+        'Processing': '128, 128, 128',
+        'SystemError': '170, 34, 34',
+        'NoProblem': '170, 34, 34',
+        'NoTestData': '170, 34, 34',
 
         'Unknown': '170, 34, 34'
     }

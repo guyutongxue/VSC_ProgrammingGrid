@@ -1,5 +1,10 @@
 # 更新日志
 
+## 0.2.6
+*2021.12.16*
+- Fix color palatte.
+- Add visual hint for processing page.
+
 ## 0.2.5
 *2021.12.16*
 - Add new solution status: WaitTimeOut, SystemError, Processing, etc.
