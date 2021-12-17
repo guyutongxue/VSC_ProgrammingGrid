@@ -277,18 +277,27 @@ export async function getDescription(info: IProblemInfo) {
             json.problem[i] = $('body').html();
         }
         function getRawIo(text: string) {
+            if (typeof text === "undefined") return "";
             return text.replace(/\r/,'').replace(/\u2003|\u200b|\u00a0|&nbsp;/g, ' ');
         }
-        const input = getRawIo(json.problem.sampleInput);
-        const output = getRawIo(json.problem.sampleOutput);
+        function text2html(text?: string) {
+            if (typeof text === "undefined") return "";
+            text = text.replace(/\r\n/g, "\n");
+            text = text.replace(/<br>/g, "\n");
+            text = text.replace(/<br\/>/g, "\n");
+            text = text.replace(/\s+\n/g, "\n");
+            text = text.replace(/\n+/g, "<br>");
+            text = text.replace(/\s{2}/g, "&nbsp;&nbsp;");
+            return text;
+        }
         const r: ProblemDescription = {
             title: json.problem.title,
-            description: json.problem.description,
-            aboutInput: json.problem.aboutInput,
-            aboutOutput: json.problem.aboutOutput,
-            hint: json.problem.hint,
-            input: input,
-            output: output
+            description: text2html(json.problem.description),
+            aboutInput: text2html(json.problem.aboutInput),
+            aboutOutput: text2html(json.problem.aboutOutput),
+            hint: text2html(json.problem.hint),
+            input: getRawIo(json.problem.sampleInput),
+            output: getRawIo(json.problem.sampleOutput)
         };
         console.log(r);
         return r;
