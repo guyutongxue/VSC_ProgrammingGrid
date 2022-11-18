@@ -7,6 +7,7 @@ import { URL, URLSearchParams } from 'url';
 
 import { getPassword, getUsername, getCourseId } from './config';
 import { IProblemInfo, IProblemSetInfo } from './problemProvider';
+import { clozeMap } from './cloze';
 
 let _cookie: Record<string, string> = {
     "PG_client": "vscode_ext; Max-Age=315360000; Expires=Fri, 05-Dec-2031 05:34:07 GMT; Path=/; Secure"
@@ -273,6 +274,12 @@ export async function getDescription(info: IProblemInfo) {
                     $(this).attr("src", base64);
                 }));
             });
+            if ($("app-pre,app-post").length) {
+                clozeMap.set(info.id, {
+                    pre: $("app-pre").text(),
+                    post: $("app-post").text()
+                });
+            }
             await Promise.all(promises);
             json.problem[i] = $('body').html();
         }

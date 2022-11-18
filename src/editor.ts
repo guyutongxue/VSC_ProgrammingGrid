@@ -6,6 +6,7 @@ import * as os from "os";
 import * as path from "path";
 import { getStatusInfo } from "./config";
 import { replaceGccDiagnostics } from "gcc-translation";
+import { clozeMap } from "./cloze";
 
 let storageDir: vscode.Uri;
 let extensionDir: vscode.Uri;
@@ -571,7 +572,11 @@ export class EditorController implements vscode.Disposable {
 
     private _initEditorContent() {
         if (this._currentProblem !== null) {
-            const content = getContent(this._solutionStoragePath);
+            let content = getContent(this._solutionStoragePath);
+            if (content === "" && clozeMap.has(this._currentProblem.id)) {
+                const { pre, post } = clozeMap.get(this._currentProblem.id)!;
+                content = pre + "// 请在这里补充代码" + post;
+            }
             setContent(this._editorCppPath, content);
         } else {
             createFile(this._editorCppPath);
@@ -607,6 +612,13 @@ export class EditorController implements vscode.Disposable {
         if (code.trim() === "") {
             vscode.window.showErrorMessage("代码不能为空。");
             return;
+        }
+        if (clozeMap.has(this._currentProblem.id)) {
+            const { pre, post } = clozeMap.get(this._currentProblem.id)!;
+            if (!code.startsWith(pre) || !code.endsWith(post)) {
+                vscode.window.showErrorMessage("未按规定完成代码填空。");
+                return;
+            }
         }
         if (/\b(system|fork)\b/.test(code)) {
             vscode.window.showErrorMessage("编程网格拒绝带有 system、fork 等单词的代码。");

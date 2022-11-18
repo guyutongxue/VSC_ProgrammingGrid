@@ -1,5 +1,9 @@
 # 更新日志
 
+## 0.2.8
+*2022.11.18*
+- Add basic "cloze" support.
+
 ## 0.2.7
 *2021.12.17*
 - Fix newline bugs.

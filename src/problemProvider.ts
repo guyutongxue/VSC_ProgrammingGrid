@@ -11,7 +11,7 @@ export interface IProblemInfo {
     index: number;
     status?: 'ac' | 'wa';
 }
-export interface IProblemSetInfo extends IProblemInfo {
+export interface IProblemSetInfo {
     id: string;
     text: string;
     available: boolean;
