@@ -276,8 +276,8 @@ export async function getDescription(info: IProblemInfo) {
             });
             if ($("app-pre,app-post").length) {
                 clozeMap.set(info.id, {
-                    pre: $("app-pre").text(),
-                    post: $("app-post").text()
+                    pre: $("app-pre").text().replace(/\u00a0/g, " "),
+                    post: $("app-post").text().replace(/\u00a0/g, " ")
                 });
             }
             await Promise.all(promises);
